@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-project(leetcode)
+project(nn_from_scratch)
 
 set(CMAKE_CXX_STANDARD 23)
 
@@ -9,4 +9,4 @@ include_directories(${CMAKE_SOURCE_DIR}/EigenRand)
 
 #enable_language(CUDA)  # Enable CUDA support in CMake
 
-add_executable(leetcode main.cpp)
+add_executable(nn_from_scratch main.cpp)

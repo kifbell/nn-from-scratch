@@ -2,8 +2,8 @@
 // Created by Kirill Belyakov on 4/18/24.
 //
 
-#ifndef LEETCODE_OPTIMIZERSTATE_H
-#define LEETCODE_OPTIMIZERSTATE_H
+#ifndef NN_OPTIMIZERSTATE_H
+#define NN_OPTIMIZERSTATE_H
 
 #include <Eigen/Dense>
 
@@ -16,4 +16,4 @@ struct OptimizerState
     {}
 };
 
-#endif //LEETCODE_OPTIMIZERSTATE_H
+#endif //NN_OPTIMIZERSTATE_H

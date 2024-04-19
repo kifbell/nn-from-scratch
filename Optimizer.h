@@ -1,5 +1,5 @@
-#ifndef LEETCODE_OPTIMIZER_H
-#define LEETCODE_OPTIMIZER_H
+#ifndef NN_OPTIMIZER_H
+#define NN_OPTIMIZER_H
 
 #include <Eigen/Dense>
 #include "OptimizerState.h"
@@ -67,4 +67,4 @@ public:
     // Additional methods as necessary
 };
 
-#endif //LEETCODE_OPTIMIZER_H
+#endif //NN_OPTIMIZER_H
