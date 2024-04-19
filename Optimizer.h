@@ -4,16 +4,17 @@
 #include <Eigen/Dense>
 #include "OptimizerState.h"
 #include <memory>
+#include <map>
+#include "eigen/Eigen/Core"
+
 //#include "Layer.h"
 
 
 class Optimizer
 {
-private:
-
-    OptimizerState state;
 public:
-    Optimizer() {};
+    Optimizer() =default;
+     ~Optimizer()= default;
 
     virtual void update(
 //            Layer& layer
@@ -21,48 +22,47 @@ public:
             Eigen::VectorXd &bias,
             const Eigen::MatrixXd &gradientWeights,
             const Eigen::VectorXd &gradientBiases,
-            std::unique_ptr<OptimizerState>& optimizerState
-    ) {
-        std::cout << "Optimizer update" << std::endl;
-    };
+            std::map<std::string, Eigen::MatrixXd> &optimizerState
+    ) = 0;
 
-    ~Optimizer()
-    {}
 };
-
-
 
 
 // Forward declaration of the optimizer state
-struct MomentumOptimizerState : public OptimizerState
+//struct MomentumOptimizerState : public OptimizerState
+//{
+//    Eigen::MatrixXd velocityWeights;
+//    Eigen::VectorXd velocityBiases;
+//
+//    MomentumOptimizerState(int weights_rows, int weights_cols, int biases_size)
+//            : velocityWeights(Eigen::MatrixXd::Zero(weights_rows, weights_cols)),
+//              velocityBiases(Eigen::VectorXd::Zero(biases_size))
+//    {}
+//};
+
+
+class MomentumOptimizer : public Optimizer
 {
-    Eigen::MatrixXd velocityWeights;
-    Eigen::VectorXd velocityBiases;
-
-    MomentumOptimizerState(int weights_rows, int weights_cols, int biases_size)
-            : velocityWeights(Eigen::MatrixXd::Zero(weights_rows, weights_cols)),
-              velocityBiases(Eigen::VectorXd::Zero(biases_size))
-    {}
-};
-
-
-class MomentumOptimizer : public Optimizer {
 private:
     double learningRate;
     double momentum;
-    std::unique_ptr<MomentumOptimizerState> state;  // Encapsulates the state
+//    std::unique_ptr<MomentumOptimizerState> state;  // Encapsulates the state
 
 public:
 
     MomentumOptimizer(double lr, double m) : learningRate(lr), momentum(m)
-    {};
+    {
 
-    void update(Eigen::MatrixXd& weights,
-                Eigen::VectorXd& biases,
-                const Eigen::MatrixXd& gradientWeights,
-                const Eigen::VectorXd& gradientBiases,
-                std::unique_ptr<MomentumOptimizerState>& optimizerState
-    );
+    }
+
+    ~MomentumOptimizer() = default;
+
+    void update(Eigen::MatrixXd &weights,
+                Eigen::VectorXd &biases,
+                const Eigen::MatrixXd &gradientWeights,
+                const Eigen::VectorXd &gradientBiases,
+                std::map<std::string, Eigen::MatrixXd> &optimizerState
+    ) override;
 
     // Additional methods as necessary
 };

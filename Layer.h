@@ -4,14 +4,13 @@
 #include <Eigen/Dense>
 #include "OptimizerState.h"
 #include "Optimizer.h"
+#include <map>
 
 
 class Layer
 {
 protected:
 public:
-    std::unique_ptr<OptimizerState> optimizerState;
-
     Layer()
     {};
 
@@ -25,10 +24,6 @@ public:
 
 //    virtual Eigen::MatrixXd &getWeights() = 0;
 //    virtual Eigen::VectorXd &getBiases() = 0;
-
-    OptimizerState *getState() const
-    { return optimizerState.get(); }
-
 };
 
 
@@ -58,14 +53,17 @@ private:
     Eigen::MatrixXd z_cache;  // Cache to store input for backpropagation
 
 public:
-    Eigen::MatrixXd weights;  // Matrix for weights
-    Eigen::VectorXd bias;     // Vector for biases
-    // Constructor to initialize weights and biases
+    Eigen::MatrixXd weights;
+    Eigen::VectorXd bias;
+
+    std::map<std::string, Eigen::MatrixXd> optimizerState;
+
     LinearLayer(int input_size, int output_size) : Layer()
     {
         // Random initialization of weights and biases for demonstration purposes
         weights = Eigen::MatrixXd::Random(output_size, input_size);
         bias = Eigen::VectorXd::Random(output_size);
+
 
 //        optimizerState = nullptr;
     }
