@@ -101,25 +101,3 @@ int main() {
 
     return 0;
 }
-
-
-//int main()
-//{
-//    auto layer = LinearLayer(10, 5);
-//    MomentumOptimizer opt = MomentumOptimizer(0.5, 0.9);
-//
-//    Eigen::VectorXd z = Eigen::VectorXd::Random(10, 1);
-//    Eigen::VectorXd y_hat = layer.pass_forward(z);
-//
-////    std::cout << y_hat << '\n';
-//
-//
-//    Eigen::VectorXd u = Eigen::VectorXd::Random(5, 1); // Example gradient matrix
-//    Eigen::VectorXd u_bar = layer.backprop(opt, u);
-//
-//
-//    std::cout << u_bar << '\n';
-//
-//
-//    return 0;
-//}
