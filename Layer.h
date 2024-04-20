@@ -5,7 +5,7 @@
 #include "OptimizerState.h"
 #include "Optimizer.h"
 #include <map>
-
+#include <string>
 
 class Layer
 {
@@ -17,35 +17,12 @@ public:
     ~Layer()
     {};
 
-    virtual Eigen::VectorXd pass_forward(const Eigen::VectorXd &input) = 0;
+    virtual Eigen::VectorXd passForward(const Eigen::VectorXd &input) = 0;
 
     virtual Eigen::VectorXd
     backprop(Optimizer &optimizer, const Eigen::VectorXd &u) = 0;
 
-//    virtual Eigen::MatrixXd &getWeights() = 0;
-//    virtual Eigen::VectorXd &getBiases() = 0;
 };
-
-
-//class LinearLayer : public Layer {
-//private:
-//    Eigen::MatrixXd z_cache;  // Cache to store input for backpropagation
-//    Eigen::MatrixXd weights;  // Matrix for weights
-//    Eigen::VectorXd bias;     // Vector for biases
-//    std::unique_ptr<OptimizerState> optimizerState;  // State managed by optimizer
-//
-//public:
-//    LinearLayer(int input_size, int output_size);
-//
-//    virtual Eigen::VectorXd pass_forward(const Eigen::VectorXd &input)=0;
-//
-//    virtual Eigen::VectorXd backprop(Optimizer &optimizer, const Eigen::VectorXd &u)=0;
-//
-//    virtual Eigen::MatrixXd &getWeights()=0;
-//    virtual Eigen::VectorXd &getBiases()=0;
-//
-//    OptimizerState *getState() const;
-//};
 
 class LinearLayer : public Layer
 {
@@ -63,88 +40,63 @@ public:
         // Random initialization of weights and biases for demonstration purposes
         weights = Eigen::MatrixXd::Random(output_size, input_size);
         bias = Eigen::VectorXd::Random(output_size);
-
-
-//        optimizerState = nullptr;
     }
 
     ~LinearLayer()
     {};
 
+    Eigen::VectorXd passForward(const Eigen::VectorXd &input) override;
 
-    // Forward pass which calculates Wx + b
-    Eigen::VectorXd pass_forward(const Eigen::VectorXd &input)
+    Eigen::VectorXd backprop(Optimizer &optimizer, const Eigen::VectorXd &u) override;
+};
+
+
+class ReLULayer : public Layer
+{
+private:
+    Eigen::MatrixXd dsigma;  // Matrix to store the derivatives
+public:
+    std::map<std::string, Eigen::MatrixXd> optimizerState;
+
+    ReLULayer(int size)
     {
-        z_cache = input;  // Cache the input (z) for use in backpropagation
-        return weights * input + bias;  // Wx + b
+        // Initialize dsigma as a diagonal matrix of size 'size'.
+        // The initial value assumes the derivative of ReLU for all positive inputs (1).
+        // This will be recalculated during the forward pass.
+        dsigma = Eigen::MatrixXd::Identity(size, size);
     }
 
-    // Backpropagation method that updates weights and biases
-//    Eigen::VectorXd backprop(const Eigen::VectorXd &u)
-//    {
-    // Convert dsigma vector to a diagonal matrix
-//        Eigen::MatrixXd Dsigma = dsigma.asDiagonal();
+    ~ReLULayer()
+    {};
 
-    // Calculate gradients
-//        Eigen::MatrixXd deltaA = u * z_cache.transpose();  // (dσ)^T * u^T * z^T
-//        Eigen::VectorXd deltaB = u;  // (dσ)^T * u^T
+    Eigen::VectorXd passForward(const Eigen::VectorXd &input) override;
 
-    // Update weights and biases
-//        weights -= learning_rate * deltaA.transpose();  // Update weights
-//        bias -= learning_rate * deltaB;  // Update biases
-
-    // Calculate and return the gradient to pass to the previous layer
-//        Eigen::VectorXd u_bar = weights.transpose() * u;  // u * dσ * A
-//
-//        return u_bar;
-//    }
-
-//    template<class O>
-//    Eigen::VectorXd backprop(O &optimizer, const Eigen::MatrixXd &u)
-    Eigen::VectorXd backprop(Optimizer &optimizer, const Eigen::VectorXd &u)
-    {
-        // Store original weights and biases for later comparison
-        Eigen::MatrixXd originalWeights = this->weights;
-        Eigen::VectorXd originalBiases = this->bias;
-
-        Eigen::MatrixXd deltaA = u * z_cache.transpose();  // (dσ)^T * u^T * z^T
-        Eigen::VectorXd deltaB = u;  // (dσ)^T * u^T
-
-        // Copy current weights and biases for later comparison
-        Eigen::MatrixXd weightsBeforeUpdate = weights;
-        Eigen::VectorXd biasesBeforeUpdate = bias;
-
-        optimizer.update(
-                this->weights,
-                this->bias,
-                deltaA,
-                deltaB,
-                this->optimizerState
-        );
-
-
-        assert(!this->weights.isApprox(originalWeights) &&
-               "Weights should have changed after optimization.");
-        assert(!this->bias.isApprox(originalBiases) &&
-               "Biases should have changed after optimization.");
-
-
-        Eigen::VectorXd u_bar = weights.transpose() * u;  // u * dσ * A
-
-        return u_bar;
-    }
-
-    Eigen::MatrixXd &getWeights()
-    { return weights; }
-
-    Eigen::VectorXd &getBiases()
-    { return bias; }
-
-//    OptimizerState *getState() const
-//    { return optimizerState.get(); }
+    Eigen::VectorXd backprop(Optimizer &optimizer, const Eigen::VectorXd &u) override;
 
 };
 
 
-#endif //LAYER_HPP
+class SigmoidLayer : public Layer
+{
+private:
+    Eigen::MatrixXd dsigma;  // Matrix to store the derivatives
+public:
+    std::map<std::string, Eigen::MatrixXd> optimizerState;
 
+    explicit SigmoidLayer(int size)
+    {
+        // Initialize dsigma as a diagonal matrix of size 'size'.
+        // The matrix will be recalculated during each forward pass.
+        dsigma = Eigen::MatrixXd::Zero(size, size);
+    }
+
+    virtual ~SigmoidLayer()
+    {};
+
+    Eigen::VectorXd passForward(const Eigen::VectorXd &input) override;
+
+    Eigen::VectorXd backprop(Optimizer &optimizer, const Eigen::VectorXd &u) override;
+};
+
+
+#endif //LAYER_HPP
