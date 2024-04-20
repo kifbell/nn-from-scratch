@@ -3,10 +3,10 @@
 #include <vector>
 #include <memory>
 
-
-//#include <eigen/Eigen/Dense>
 #include "Layer.h"
 #include "Optimizer.h"
+#include "DataHandler.h"
+#include "SoftmaxLayer.h"
 
 
 class MSELoss
@@ -38,12 +38,12 @@ public:
     {}
 
     // Forward pass through all layers
-    Eigen::VectorXd pass_forward(const Eigen::VectorXd &input)
+    Eigen::VectorXd passForward(const Eigen::VectorXd &input)
     {
         Eigen::VectorXd current_output = input;
         for (auto &layer: layers)
         {
-            current_output = layer->pass_forward(current_output);
+            current_output = layer->passForward(current_output);
         }
         return current_output;
     }
@@ -60,44 +60,126 @@ public:
 
 
 
+int argmax(const Eigen::VectorXd& vec) {
+    Eigen::Index maxIndex;
+    vec.maxCoeff(&maxIndex);
+    return maxIndex;
+}
 
-int main() {
+
+Eigen::VectorXd labelToOneHot(int label)
+{
+    Eigen::VectorXd oneHot = Eigen::VectorXd::Zero(
+            10);  // Create a vector of size 10 initialized with zeros
+    if (label >= 0 && label < 10)
+    {  // Ensure the label is within the valid range
+        oneHot(label) = 1.0;  // Set the appropriate position to 1
+    } else
+    {
+        std::cerr << "Label out of bounds"
+                  << std::endl;  // Error handling for out-of-bound labels
+    }
+    return oneHot;
+}
+
+double calculateMean(const std::vector<double> &numbers)
+{
+    if (numbers.empty()) return 0.0;  // Return 0 if the vector is empty to avoid division by zero
+
+    double sum = std::accumulate(numbers.begin(), numbers.end(), 0.0);
+    return sum / numbers.size();
+}
+
+Eigen::VectorXd calculateMean(const std::vector<Eigen::VectorXd> &vectors)
+{
+    if (vectors.empty()) return Eigen::VectorXd();  // Return an empty vector if no vectors provided
+
+    Eigen::VectorXd sum = Eigen::VectorXd::Zero(
+            vectors[0].size());  // Initialize sum vector of the same size
+    for (const auto &vec: vectors)
+    {
+        sum += vec;  // Sum all vectors
+    }
+    return sum / vectors.size();  // Divide by the number of vectors to get the mean
+}
+
+int main()
+{
     // Create layers
-    std::shared_ptr<Layer> layer1 = std::make_shared<LinearLayer>(3, 5); // 3 inputs, 5 outputs
-    std::shared_ptr<Layer> layer2 = std::make_shared<LinearLayer>(5, 1); // 5 inputs, 1 output
+    std::shared_ptr<Layer> layer1 = std::make_shared<LinearLayer>(784, 300);
+    std::shared_ptr<Layer> activation1 = std::make_shared<SigmoidLayer>(300);
+    std::shared_ptr<Layer> layer2 = std::make_shared<LinearLayer>(300, 100);
+    std::shared_ptr<Layer> activation2 = std::make_shared<SigmoidLayer>(100);
+    std::shared_ptr<Layer> layer3 = std::make_shared<LinearLayer>(100, 10);
+    std::shared_ptr<Layer> activation3 = std::make_shared<SoftmaxLayer>();
 
     // Create neural network
-    std::vector<std::shared_ptr<Layer>> layers = {layer1, layer2};
+    std::vector<std::shared_ptr<Layer>> layers = {
+            layer1,
+            activation1,
+            layer2,
+            activation2,
+            layer3,
+            activation3
+    };
     NeuralNetwork nn(layers);
 
     // Optimizer
-    MomentumOptimizer optimizer(0.1, 0.9);  // Learning rate and momentum
+    MomentumOptimizer optimizer(0.01, 0.9);  // Learning rate and momentum
 
     // Loss
     MSELoss loss;
 
-    // Example training data
-    Eigen::VectorXd input(3);  // Input size must match the first layer's input size
-    input << 0.5, -1.5, 0.6;
-    Eigen::VectorXd target(1); // Target output size must match the last layer's output size
-    target << 0.1;
+
+    DataHandler trainHandler;
+    trainHandler.readData(
+            "/Users/fuckingbell/programming/nn-from-scratch/data/mnist_train.csv");
+    std::cout << "rows read by dataHandler: " << trainHandler.getNumberOfSamples() << std::endl;
+
+    int batchSize = 20;
+    int epochs = 10000;
 
     // Training loop
-    for (int i = 0; i < 10; ++i) { // Train for 100 iterations
-        // Forward pass
-        Eigen::VectorXd prediction = nn.pass_forward(input);
-        std::cout << prediction<< std::endl;
+    for (int epoch = 0; epoch < epochs; epoch++)
+    {
+        auto batch = trainHandler.getRandomBatch(batchSize);
 
-        // Compute loss and gradient
-        double current_loss = loss.compute_loss(prediction, target);
-        Eigen::VectorXd loss_gradient = loss.compute_gradient(prediction, target);
 
-        // Backpropagation
-        nn.backprop(optimizer, loss_gradient);
+        std::vector<Eigen::VectorXd> gradients;
+        std::vector<double> losses;
+        for (size_t idx = 0; idx < batchSize; idx++)
+        {
+            Eigen::VectorXd input(batch.second[idx].size());
+            Eigen::VectorXd target = labelToOneHot(batch.first[idx]);
+
+            Eigen::VectorXd prediction = nn.passForward(input);
+
+//            std::cout << "target: " << batch.first[idx] << ", prediction: " << argmax(prediction)<< std::endl;
+//            std::cout << "prediction: " << prediction << std::endl;
+//            std::cout << "    target: " << target << std::endl;
+
+            double current_loss = loss.compute_loss(prediction, target);
+//            std::cout << "current_loss: " <<current_loss << std::endl;
+            Eigen::VectorXd gradient = loss.compute_gradient(prediction, target);
+
+            // batch loss history
+            gradients.push_back(gradient);
+            losses.push_back(current_loss);
+        }
+
+        // step by mean batch gradient
+        Eigen::VectorXd gradientMean = calculateMean(gradients);
+        nn.backprop(optimizer, gradientMean);
 
         // Output training progress
-        std::cout << "Epoch " << i + 1 << ", Loss: " << current_loss << std::endl;
+        std::cout << "Epoch " << epoch << ", Loss: " << calculateMean(losses)
+                  << std::endl;
     }
 
     return 0;
 }
+
+
+
+
+
