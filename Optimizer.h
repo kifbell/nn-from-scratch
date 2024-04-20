@@ -27,20 +27,6 @@ public:
 
 };
 
-
-// Forward declaration of the optimizer state
-//struct MomentumOptimizerState : public OptimizerState
-//{
-//    Eigen::MatrixXd velocityWeights;
-//    Eigen::VectorXd velocityBiases;
-//
-//    MomentumOptimizerState(int weights_rows, int weights_cols, int biases_size)
-//            : velocityWeights(Eigen::MatrixXd::Zero(weights_rows, weights_cols)),
-//              velocityBiases(Eigen::VectorXd::Zero(biases_size))
-//    {}
-//};
-
-
 class MomentumOptimizer : public Optimizer
 {
 private:
