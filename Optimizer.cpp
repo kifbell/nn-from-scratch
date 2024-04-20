@@ -10,7 +10,7 @@ void MomentumOptimizer::update(Eigen::MatrixXd &weights,
                                std::map<std::string, Eigen::MatrixXd> &optimizerState
 )
 {
-    std::cout << "MomentumOptimizer update" << std::endl;
+//    std::cout << "MomentumOptimizer update" << std::endl;
 
     if (optimizerState.find("velocityWeights") == optimizerState.end())
     {
@@ -21,7 +21,7 @@ void MomentumOptimizer::update(Eigen::MatrixXd &weights,
     {
         optimizerState["velocityBiases"] = Eigen::VectorXd::Zero(biases.size());
     }
-    // Update velocities
+
     optimizerState["velocityWeights"] =
             momentum * optimizerState["velocityWeights"] +
             (1 - momentum) * gradientWeights;
@@ -29,6 +29,11 @@ void MomentumOptimizer::update(Eigen::MatrixXd &weights,
             momentum * optimizerState["velocityBiases"] +
             (1 - momentum) * gradientBiases;
 
+//    std::cout << "velocityWeights" << std::endl;
+//    std::cout << optimizerState["velocityWeights"] << std::endl;
+
     weights -= learningRate * optimizerState["velocityWeights"];
+//    std::cout <<  optimizerState["velocityWeights"] <<std::endl;
+//    std::cout <<  gradientWeights <<std::endl;
     biases -= learningRate * optimizerState["velocityBiases"];
 }
