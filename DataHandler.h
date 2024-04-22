@@ -6,104 +6,119 @@
 #include <fstream>
 #include <sstream>
 #include <random>
+#include <Eigen/Dense>
 
-class DataHandler {
+namespace NeuralNet
+{
+class DataHandler
+{
 private:
-    std::vector<int> labels; // Store labels in a vector
-    std::vector<std::vector<double>> features; // Store features in a 2D vector
-    size_t currentBatchIndex = 0; // Current index for ordered batch retrieval
+    std::vector<int> labels;
+    Eigen::MatrixXd features;
+    size_t currentBatchIndex = 0;
 
 public:
-    DataHandler() {}
+    DataHandler()
+    {}
 
-    // Method to read data from a CSV file
-    void readData(const std::string& filename) {
+    void readData(const std::string &filename)
+    {
         std::ifstream file(filename);
         std::string line, cell;
 
-        getline(file, line); // skip fist line w/ the names of the columns
-        while (getline(file, line)) {
+        getline(file, line);
+
+
+        int numCols = 0;
+        int numRows = 0;
+        std::streampos oldPos = file.tellg();
+
+        while (getline(file, line))
+        {
+            numRows++;
+            if (numRows == 1)
+            {
+
+                numCols = std::count(line.begin(), line.end(), ',');
+            }
+        }
+
+
+        file.clear();
+        file.seekg(oldPos);
+
+
+        features.resize(numRows, numCols);
+        labels.reserve(numRows);
+
+        int rowIndex = 0;
+        while (getline(file, line))
+        {
             std::stringstream lineStream(line);
-            std::vector<double> parsedRow;
 
             getline(lineStream, cell, ',');
-            labels.push_back(stoi(cell)); // Store the label separately
+            labels.push_back(stoi(cell));
 
-            while (getline(lineStream, cell, ',')) {
-                parsedRow.push_back(stod(cell)); // Convert string to integer
+            int colIndex = 0;
+            while (getline(lineStream, cell, ','))
+            {
+                features(rowIndex, colIndex++) = std::stod(cell);
             }
-            features.push_back(parsedRow);
+            rowIndex++;
         }
         file.close();
     }
 
-    // Method to get random batches of data
-    std::pair<std::vector<int>, std::vector<std::vector<double>>> getRandomBatch(int batchSize) {
+    std::pair<std::vector<int>, Eigen::MatrixXd> getRandomBatch(int batchSize)
+    {
         std::vector<int> batchLabels;
-        std::vector<std::vector<double>> batchFeatures;
+        Eigen::MatrixXd batchFeatures(batchSize, features.cols());
 
-        std::random_device rd; // Obtain a random number from hardware
-        std::mt19937 eng(rd()); // Seed the generator
-        std::uniform_int_distribution<> distr(0, labels.size() - 1); // Define the range
+        std::random_device rd;
+        std::mt19937 eng(rd());
+        std::uniform_int_distribution<> distr(0, labels.size() - 1);
 
-        for (int i = 0; i < batchSize; i++) {
-            int index = distr(eng); // Generate a random index
-            batchLabels.push_back(labels[index]); // Add the label at the index to the batch
-            batchFeatures.push_back(features[index]); // Add the features at the index to the batch
+        for (int i = 0; i < batchSize; i++)
+        {
+            int index = distr(eng);
+            batchLabels.push_back(labels[index]);
+            batchFeatures.row(i) = features.row(index);
         }
 
         return {batchLabels, batchFeatures};
     }
 
-    // Method to get batches of data in order
-    std::pair<std::vector<int>, std::vector<std::vector<double>>> getNextBatch(int batchSize) {
-        std::vector<int> batchLabels;
-        std::vector<std::vector<double>> batchFeatures;
+    std::pair<std::vector<int>, Eigen::MatrixXd> getNextBatch(int batchSize)
+    {
+        int numSamples = std::min(batchSize,
+                                  static_cast<int>(labels.size() - currentBatchIndex));
+        Eigen::MatrixXd batchFeatures(numSamples, features.cols());
+        std::vector<int> batchLabels(numSamples);
 
-        for (int i = 0; i < batchSize && currentBatchIndex < labels.size(); i++, currentBatchIndex++) {
-            batchLabels.push_back(labels[currentBatchIndex]); // Add the label at the current index
-            batchFeatures.push_back(features[currentBatchIndex]); // Add the features at the current index
+        for (int i = 0; i < numSamples; i++, currentBatchIndex++)
+        {
+            batchLabels[i] = labels[currentBatchIndex];
+            batchFeatures.row(i) = features.row(currentBatchIndex);
         }
 
         return {batchLabels, batchFeatures};
     }
 
-    void resetBatchIndex() {
+    void resetBatchIndex()
+    {
         currentBatchIndex = 0;
     }
 
-    int getNumberOfSamples() const {
+    int getNumberOfSamples() const
+    {
         return labels.size();
     }
+
+    int getNumberOfColumns() const
+    {
+        return features.cols();
+    }
 };
+}
 
-//int main() {
-//    DataHandler handler;
-//    handler.readData("data.csv"); // Specify the CSV file containing the data
-//
-//    // Get a random batch of 5 samples and print them
-//    auto randomBatch = handler.getRandomBatch(5);
-//    std::cout << "Random Batch:" << std::endl;
-//    for (size_t i = 0; i < randomBatch.first.size(); i++) {
-//        std::cout << "Label: " << randomBatch.first[i] << " Features: ";
-//        for (int feature : randomBatch.second[i]) {
-//            std::cout << feature << " ";
-//        }
-//        std::cout << std::endl;
-//    }
-//
-//    // Get an ordered batch of 5 samples and print them
-//    auto orderedBatch = handler.getNextBatch(5);
-//    std::cout << "\nOrdered Batch:" << std::endl;
-//    for (size_t i = 0; i < orderedBatch.first.size(); i++) {
-//        std::cout << "Label: " << orderedBatch.first[i] << " Features: ";
-//        for (int feature : orderedBatch.second[i]) {
-//            std::cout << feature << " ";
-//        }
-//        std::cout << std::endl;
-//    }
-//
-//    return 0;
-//}
-
-#endif //NN_FROM_SCRATCH_DATAHANDLER_H
+#endif // NN_FROM_SCRATCH_DATAHANDLER_H
