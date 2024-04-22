@@ -13,6 +13,5 @@ add_executable(nn_from_scratch main.cpp
         Optimizer.cpp
         Layer.cpp
         DataHandler.cpp
-        SoftmaxLayer.h
 )
 #add_executable(nn_from_scratch Optimizer.cpp)
