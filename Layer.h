@@ -2,76 +2,63 @@
 #define LAYER_HPP
 
 #include <Eigen/Dense>
-#include "OptimizerState.h"
 #include "Optimizer.h"
 #include <map>
 #include <string>
 
+
+namespace NeuralNet
+{
+
+using Vector = Eigen::VectorXd;
+using Matrix = Eigen::MatrixXd;
+
+
 class Layer
 {
-protected:
 public:
-    Layer()
-    {};
+    virtual Vector passForward(const Vector &input) = 0;
 
-    ~Layer()
-    {};
-
-    virtual Eigen::VectorXd passForward(const Eigen::VectorXd &input) = 0;
-
-    virtual Eigen::VectorXd
-    backprop(Optimizer &optimizer, const Eigen::VectorXd &u) = 0;
+    virtual Vector
+    backprop(Optimizer &optimizer, const Vector &u) = 0;
 
 };
 
 class LinearLayer : public Layer
 {
 private:
-    Eigen::MatrixXd z_cache;  // Cache to store input for backpropagation
+    Matrix z_cache;  // Cache to store input for backpropagation
 
 public:
-    Eigen::MatrixXd weights;
-    Eigen::VectorXd bias;
+    Matrix weights_;
+    Vector bias_;
 
-    std::map<std::string, Eigen::MatrixXd> optimizerState;
+    std::map<std::string, Matrix> optimizerState_;
 
-    LinearLayer(int input_size, int output_size) : Layer()
-    {
-        // Random initialization of weights and biases for demonstration purposes
-        weights = Eigen::MatrixXd::Random(output_size, input_size);
-        bias = Eigen::VectorXd::Random(output_size);
-    }
+    LinearLayer(int input_size, int output_size)
+            : weights_(Matrix::Random(output_size, input_size)),
+              bias_(Vector::Random(output_size))
+    {}
 
-    ~LinearLayer()
-    {};
+    Vector passForward(const Vector &input) override;
 
-    Eigen::VectorXd passForward(const Eigen::VectorXd &input) override;
-
-    Eigen::VectorXd backprop(Optimizer &optimizer, const Eigen::VectorXd &u) override;
+    Vector backprop(Optimizer &optimizer, const Vector &u) override;
 };
 
 
 class ReLULayer : public Layer
 {
 private:
-    Eigen::MatrixXd dsigma;  // Matrix to store the derivatives
+    Matrix dsigma;  // Matrix to store the derivatives
 public:
-    std::map<std::string, Eigen::MatrixXd> optimizerState;
+    std::map<std::string, Matrix> optimizerState;
 
-    ReLULayer(int size)
-    {
-        // Initialize dsigma as a diagonal matrix of size 'size'.
-        // The initial value assumes the derivative of ReLU for all positive inputs (1).
-        // This will be recalculated during the forward pass.
-        dsigma = Eigen::MatrixXd::Identity(size, size);
-    }
+    explicit ReLULayer(int size) : dsigma(size, size)
+    {}
 
-    ~ReLULayer()
-    {};
+    Vector passForward(const Vector &input) override;
 
-    Eigen::VectorXd passForward(const Eigen::VectorXd &input) override;
-
-    Eigen::VectorXd backprop(Optimizer &optimizer, const Eigen::VectorXd &u) override;
+    Vector backprop(Optimizer &optimizer, const Vector &u) override;
 
 };
 
@@ -79,24 +66,38 @@ public:
 class SigmoidLayer : public Layer
 {
 private:
-    Eigen::MatrixXd dsigma;  // Matrix to store the derivatives
+    Matrix dsigma;  // Matrix to store the derivatives
 public:
-    std::map<std::string, Eigen::MatrixXd> optimizerState;
+    std::map<std::string, Matrix> optimizerState;
 
-    explicit SigmoidLayer(int size)
-    {
-        // Initialize dsigma as a diagonal matrix of size 'size'.
-        // The matrix will be recalculated during each forward pass.
-        dsigma = Eigen::MatrixXd::Zero(size, size);
-    }
+    explicit SigmoidLayer(int size) : dsigma(size, size)
+    {}
 
-    virtual ~SigmoidLayer()
-    {};
+    Vector passForward(const Vector &input) override;
 
-    Eigen::VectorXd passForward(const Eigen::VectorXd &input) override;
-
-    Eigen::VectorXd backprop(Optimizer &optimizer, const Eigen::VectorXd &u) override;
+    Vector backprop(Optimizer &optimizer, const Vector &u) override;
 };
+
+
+class SoftmaxLayer : public Layer
+{
+private:
+    Vector lastInput_;
+
+public:
+    SoftmaxLayer()
+    {}
+
+    ~SoftmaxLayer()
+    {}
+
+    Vector passForward(const Vector &input) override;
+
+    Matrix getJacobian(Vector& output);
+
+    Vector backprop(Optimizer &optimizer, const Vector &u) override;
+};
+}
 
 
 #endif //LAYER_HPP

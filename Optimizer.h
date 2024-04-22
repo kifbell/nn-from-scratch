@@ -2,7 +2,6 @@
 #define NN_OPTIMIZER_H
 
 #include <Eigen/Dense>
-#include "OptimizerState.h"
 #include <memory>
 #include <map>
 #include "eigen/Eigen/Core"
@@ -13,8 +12,9 @@
 class Optimizer
 {
 public:
-    Optimizer() =default;
-     ~Optimizer()= default;
+    Optimizer() = default;
+
+    ~Optimizer() = default;
 
     virtual void update(
 //            Layer& layer

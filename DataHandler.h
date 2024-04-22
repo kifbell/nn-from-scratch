@@ -10,98 +10,62 @@
 
 namespace NeuralNet
 {
+
+
+struct DataBatch
+{
+    std::vector<int> labels;
+    Eigen::MatrixXd features;
+
+    DataBatch(int batchSize, int numFeatures) : labels(batchSize),
+                                                features(batchSize, numFeatures)
+    {}
+};
+
+
 class DataHandler
 {
 private:
-    std::vector<int> labels;
-    Eigen::MatrixXd features;
+    std::vector<int> labels_;
+    Eigen::MatrixXd features_;
     size_t currentBatchIndex = 0;
 
 public:
-    DataHandler()
-    {}
+    DataHandler()=default;
 
-    void readData(const std::string &filename)
+
+    const DataBatch getRandomBatch(int batchSize)
     {
-        std::ifstream file(filename);
-        std::string line, cell;
 
-        getline(file, line);
-
-
-        int numCols = 0;
-        int numRows = 0;
-        std::streampos oldPos = file.tellg();
-
-        while (getline(file, line))
-        {
-            numRows++;
-            if (numRows == 1)
-            {
-
-                numCols = std::count(line.begin(), line.end(), ',');
-            }
-        }
-
-
-        file.clear();
-        file.seekg(oldPos);
-
-
-        features.resize(numRows, numCols);
-        labels.reserve(numRows);
-
-        int rowIndex = 0;
-        while (getline(file, line))
-        {
-            std::stringstream lineStream(line);
-
-            getline(lineStream, cell, ',');
-            labels.push_back(stoi(cell));
-
-            int colIndex = 0;
-            while (getline(lineStream, cell, ','))
-            {
-                features(rowIndex, colIndex++) = std::stod(cell);
-            }
-            rowIndex++;
-        }
-        file.close();
-    }
-
-    std::pair<std::vector<int>, Eigen::MatrixXd> getRandomBatch(int batchSize)
-    {
-        std::vector<int> batchLabels;
-        Eigen::MatrixXd batchFeatures(batchSize, features.cols());
+        DataBatch batch(batchSize, features_.cols());
 
         std::random_device rd;
         std::mt19937 eng(rd());
-        std::uniform_int_distribution<> distr(0, labels.size() - 1);
+        std::uniform_int_distribution<> distr(0, labels_.size() - 1);
 
         for (int i = 0; i < batchSize; i++)
         {
             int index = distr(eng);
-            batchLabels.push_back(labels[index]);
-            batchFeatures.row(i) = features.row(index);
+            batch.labels[i] = labels_[index];
+            batch.features.row(i) = features_.row(index);
         }
 
-        return {batchLabels, batchFeatures};
+        return batch;
     }
 
-    std::pair<std::vector<int>, Eigen::MatrixXd> getNextBatch(int batchSize)
+    const DataBatch getNextBatch(int batchSize)
     {
         int numSamples = std::min(batchSize,
-                                  static_cast<int>(labels.size() - currentBatchIndex));
-        Eigen::MatrixXd batchFeatures(numSamples, features.cols());
-        std::vector<int> batchLabels(numSamples);
+                                  static_cast<int>(labels_.size() - currentBatchIndex));
+        DataBatch batch(batchSize, features_.cols());
 
         for (int i = 0; i < numSamples; i++, currentBatchIndex++)
         {
-            batchLabels[i] = labels[currentBatchIndex];
-            batchFeatures.row(i) = features.row(currentBatchIndex);
+            batch.labels[i] = labels_[currentBatchIndex];
+            batch.features.row(i) = features_.row(currentBatchIndex);
         }
 
-        return {batchLabels, batchFeatures};
+        return batch;
     }
 
     void resetBatchIndex()
@@ -111,13 +75,17 @@ public:
 
     int getNumberOfSamples() const
     {
-        return labels.size();
+        return labels_.size();
     }
 
     int getNumberOfColumns() const
     {
-        return features.cols();
+        return features_.cols();
     }
+
+    void readData(const std::string &filename);
+
+    static void skipFirstLine(std::ifstream &file);
 };
 }
 

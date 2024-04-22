@@ -6,58 +6,13 @@
 #include "Layer.h"
 #include "Optimizer.h"
 #include "DataHandler.h"
-#include "SoftmaxLayer.h"
+#include "Loss.h"
+#include "NeuralNetwork.h"
+
+using namespace NeuralNet;
 
 
-class MSELoss
-{
-public:
-    double
-    compute_loss(const Eigen::MatrixXd &predictions, const Eigen::MatrixXd &targets)
-    {
-        return (predictions - targets).array().square().mean();
-    }
-
-    Eigen::MatrixXd
-    compute_gradient(const Eigen::MatrixXd &predictions, const Eigen::MatrixXd &targets)
-    {
-        return 2.0 * (predictions - targets) / predictions.cols();
-    }
-};
-
-
-class NeuralNetwork
-{
-private:
-    std::vector<std::shared_ptr<Layer>> layers;
-
-public:
-    NeuralNetwork(const std::vector<std::shared_ptr<Layer>> &init_layers) : layers(
-            init_layers)
-    {}
-
-    Eigen::VectorXd passForward(const Eigen::VectorXd &input)
-    {
-        Eigen::VectorXd current_output = input;
-        for (auto &layer: layers)
-        {
-            current_output = layer->passForward(current_output);
-        }
-        return current_output;
-    }
-
-    void backprop(Optimizer &optimizer, const Eigen::VectorXd &output_gradient)
-    {
-        Eigen::VectorXd current_gradient = output_gradient;
-        for (auto it = layers.rbegin(); it != layers.rend(); ++it)
-        {
-            current_gradient = (*it)->backprop(optimizer, current_gradient);
-        }
-    }
-};
-
-
-int argmax(const Eigen::VectorXd &vec)
+int argmax(const Vector &vec)
 {
     Eigen::Index maxIndex;
     vec.maxCoeff(&maxIndex);
@@ -65,9 +20,9 @@ int argmax(const Eigen::VectorXd &vec)
 }
 
 
-Eigen::VectorXd labelToOneHot(int label)
+Vector labelToOneHot(int label)
 {
-    Eigen::VectorXd oneHot = Eigen::VectorXd::Zero(
+    Vector oneHot = Vector::Zero(
             10);
     if (label >= 0 && label < 10)
     {
@@ -88,17 +43,15 @@ double calculateMean(const std::vector<double> &numbers)
     return sum / numbers.size();
 }
 
-Eigen::VectorXd calculateMean(const std::vector<Eigen::VectorXd> &vectors)
+Vector calculateColwiseMean(const Eigen::MatrixXd &matrix)
 {
-    if (vectors.empty()) return Eigen::VectorXd();
+    if (matrix.rows() == 0)
+        return Vector();  // Return an empty vector if the matrix is empty
 
-    Eigen::VectorXd sum = Eigen::VectorXd::Zero(
-            vectors[0].size());  // Initialize sum vector of the same size
-    for (const auto &vec: vectors)
-    {
-        sum += vec;
-    }
-    return sum / vectors.size();  // Divide by the number of vectors to get the mean
+    // Compute the mean of each column
+    Vector mean = matrix.colwise().mean();
+
+    return mean;
 }
 
 int main()
@@ -127,11 +80,11 @@ int main()
 
     NeuralNet::DataHandler trainHandler;
     trainHandler.readData(
-            "/Users/fuckingbell/programming/nn-from-scratch/data/mnist_train.csv");
+            "/Users/fuckingbell/programming/nn-from-scratch/data/mnist_test.csv");
     std::cout << "rows read by dataHandler: " << trainHandler.getNumberOfSamples()
               << std::endl;
 
-    int batchSize = 20;
+    int batchSize = 5;
     int epochs = 10000;
 
     // Training loop
@@ -140,14 +93,18 @@ int main()
         auto batch = trainHandler.getRandomBatch(batchSize);
 
 
-        std::vector<Eigen::VectorXd> gradients;
+        Matrix gradients(batchSize, 10);
         std::vector<double> losses;
         for (size_t idx = 0; idx < batchSize; idx++)
         {
-            Eigen::VectorXd input(batch.second.row(idx).size());
-            Eigen::VectorXd target = labelToOneHot(batch.first[idx]);
+//            Vector input(batch.features.row(idx).size());
+            Vector input = batch.features.row(idx);
+            Vector target = labelToOneHot(batch.labels[idx]);
 
-            Eigen::VectorXd prediction = nn.passForward(input);
+//            std::cout << "input" << std::endl;
+//            std::cout << batch.features.row(idx).transpose() << std::endl;
+
+            Vector prediction = nn.passForward(input);
 
 //            std::cout << "target: " << batch.first[idx] << ", prediction: " << argmax(prediction)<< std::endl;
 //            std::cout << "prediction: " << prediction << std::endl;
@@ -155,15 +112,16 @@ int main()
 
             double current_loss = loss.compute_loss(prediction, target);
 //            std::cout << "current_loss: " <<current_loss << std::endl;
-            Eigen::VectorXd gradient = loss.compute_gradient(prediction, target);
+            Vector gradient = loss.compute_gradient(prediction, target);
 
             // batch loss history
-            gradients.push_back(gradient);
+            gradients.row(idx) = gradient;
             losses.push_back(current_loss);
         }
 
         // step by mean batch gradient
-        Eigen::VectorXd gradientMean = calculateMean(gradients);
+        Vector gradientMean = calculateColwiseMean(gradients);
+//        std::cout << "gradientMean" << gradientMean << std::endl;
         nn.backprop(optimizer, gradientMean);
 
         std::cout << "Epoch " << epoch << ", Loss: " << calculateMean(losses)

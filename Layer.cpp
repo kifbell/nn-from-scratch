@@ -6,7 +6,9 @@
 #include "Optimizer.h"
 #include <iostream>
 
-Eigen::VectorXd LinearLayer::passForward(const Eigen::VectorXd &input)
+namespace NeuralNet
+{
+Vector LinearLayer::passForward(const Vector &input)
 {
     z_cache = input;  // Cache the input (z) for use in backpropagation
 //    std::cout << "forward z_cache.transpose()" << std::endl;
@@ -14,66 +16,64 @@ Eigen::VectorXd LinearLayer::passForward(const Eigen::VectorXd &input)
 //    std::cout << "weights" << std::endl;
 //    std::cout << weights << std::endl;
 //    assert(0);
-    return weights * input + bias;  // Wx + b
+    return weights_ * input + bias_;
 };
 
-Eigen::VectorXd LinearLayer::backprop(Optimizer &optimizer, const Eigen::VectorXd &u)
+Vector LinearLayer::backprop(Optimizer &optimizer, const Vector &u)
 {
 //    std::cout << "LinearLayer.backprop" << std::endl;
     // Store original weights and biases for later comparison
-    Eigen::MatrixXd originalWeights = this->weights;
-    Eigen::VectorXd originalBiases = this->bias;
+    Matrix originalWeights = weights_;
+    Vector originalBiases = bias_;
 
-    Eigen::MatrixXd deltaA = u * z_cache.transpose();  // (dσ)^T * u^T * z^T
-    Eigen::VectorXd deltaB = u;  // (dσ)^T * u^T
+    Matrix deltaA = u * z_cache.transpose();  // (dσ)^T * u^T * z^T
+    Vector deltaB = u;  // (dσ)^T * u^T
+//    std::cout << deltaA << std::endl;
+//    std::cout << u.transpose() << std::endl;
 //    std::cout << "u.transpose()" << std::endl;
 //    std::cout << u.transpose() << std::endl;
 //    std::cout << "z_cache.transpose()" << std::endl;
 //    std::cout << z_cache.transpose() << std::endl;
 
+    Vector u_bar = weights_.transpose() * u;  // u * dσ * A
     optimizer.update(
-            this->weights,
-            this->bias,
+            weights_,
+            bias_,
             deltaA,
             deltaB,
-            this->optimizerState
+            optimizerState_
     );
 
-    assert(!this->weights.isApprox(originalWeights) &&
+    assert(!weights_.isApprox(originalWeights) &&
            "Weights should have changed after optimization.");
-    assert(!this->bias.isApprox(originalBiases) &&
+    assert(!bias_.isApprox(originalBiases) &&
            "Biases should have changed after optimization.");
 
-    Eigen::VectorXd u_bar = weights.transpose() * u;  // u * dσ * A
 
     return u_bar;
 };
 
 
-Eigen::VectorXd ReLULayer::passForward(const Eigen::VectorXd &input)
+Vector ReLULayer::passForward(const Vector &input)
 {
-    // Calculate the output using ReLU activation
-    Eigen::MatrixXd output = input.unaryExpr(
+    Matrix output = input.unaryExpr(
             [](double elem) { return std::max(0.0, elem); });
 
-    // Recalculate dsigma based on the input
     dsigma = input.unaryExpr(
             [](double elem) { return elem > 0 ? 1.0 : 0.0; }).asDiagonal();
 
     return output;
 }
 
-Eigen::VectorXd ReLULayer::backprop(Optimizer &optimizer, const Eigen::VectorXd &u)
+Vector ReLULayer::backprop(Optimizer &, const Vector &u)
 {
-    optimizer;
-    // Apply the stored dsigma to the incoming gradient
     return dsigma * u;
 }
 
 
-Eigen::VectorXd SigmoidLayer::passForward(const Eigen::VectorXd &input)
+Vector SigmoidLayer::passForward(const Vector &input)
 {
-    Eigen::VectorXd output = input.unaryExpr([](double elem) {
+    Vector output = input.unaryExpr([](double elem) {
         return 1.0 / (1.0 + std::exp(-elem));
     }); // fixme this is 1, dsigma is then 0
 
@@ -83,19 +83,60 @@ Eigen::VectorXd SigmoidLayer::passForward(const Eigen::VectorXd &input)
     // Recalculate dsigma based on the output of the sigmoid function
     dsigma = output.unaryExpr(
             [](double y) {
-        return y * (1.0 - y);
-    }).asDiagonal();
+                return y * (1.0 - y);
+            }).asDiagonal();
 
     return output;
 }
 
-Eigen::VectorXd SigmoidLayer::backprop(Optimizer &optimizer, const Eigen::VectorXd &u)
+Vector SigmoidLayer::backprop(Optimizer &, const Vector &u)
 {
-    optimizer;
-
 //    std::cout << "dsigma" << std::endl;
 //    std::cout << dsigma << std::endl;
-
     return dsigma * u;
+}
+
+
+Vector SoftmaxLayer::passForward(const Vector &input)
+{
+    lastInput_ = input;
+    double maxInput = input.maxCoeff();
+    Vector exps = (input.array() - maxInput).exp();
+
+    return exps / exps.sum();
+}
+
+
+
+Matrix SoftmaxLayer::getJacobian(Vector& output){
+
+    int dim = output.size();
+    Matrix jacobian(dim, dim);
+
+    for (int i = 0; i < dim; ++i)
+    {
+        for (int j = 0; j < dim; ++j)
+        {
+            if (i == j)
+            {
+                jacobian(i, j) = output(i) * (1 - output(i));
+            } else
+            {
+                jacobian(i, j) = -output(i) * output(j);
+            }
+        }
+    }
+    return jacobian;
+}
+
+
+Vector SoftmaxLayer::backprop(Optimizer &, const Vector &u)
+{
+    Vector lastOutput = passForward(lastInput_);
+    Matrix jacobian = getJacobian(lastOutput);
+    return jacobian * u;
+}
+
+
 }
 
