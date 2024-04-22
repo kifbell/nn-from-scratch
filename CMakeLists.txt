@@ -7,11 +7,12 @@ set(CMAKE_CXX_STANDARD 23)
 include_directories(${CMAKE_SOURCE_DIR}/eigen)
 include_directories(${CMAKE_SOURCE_DIR}/EigenRand)
 
-#enable_language(CUDA)  # Enable CUDA support in CMake
-
 add_executable(nn_from_scratch main.cpp
         Optimizer.cpp
         Layer.cpp
         DataHandler.cpp
+        Loss.cpp
+        NeuralNetwork.cpp
+
 )
 #add_executable(nn_from_scratch Optimizer.cpp)
