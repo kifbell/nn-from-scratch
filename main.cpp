@@ -54,38 +54,16 @@ Vector calculateColwiseMean(const Eigen::MatrixXd &matrix)
     return mean;
 }
 
-int main()
+
+int trainNN(NeuralNetwork &nn,
+            MSELoss &loss,
+            Optimizer &optimizer,
+            DataHandler &trainHandler,
+            int batchSize,
+            int epochs
+)
 {
-    std::shared_ptr<Layer> layer1 = std::make_shared<LinearLayer>(784, 300);
-    std::shared_ptr<Layer> activation1 = std::make_shared<SigmoidLayer>(300);
-    std::shared_ptr<Layer> layer2 = std::make_shared<LinearLayer>(300, 100);
-    std::shared_ptr<Layer> activation2 = std::make_shared<SigmoidLayer>(100);
-    std::shared_ptr<Layer> layer3 = std::make_shared<LinearLayer>(100, 10);
-    std::shared_ptr<Layer> activation3 = std::make_shared<SoftmaxLayer>();
 
-    std::vector<std::shared_ptr<Layer>> layers = {
-            layer1,
-            activation1,
-            layer2,
-            activation2,
-            layer3,
-            activation3
-    };
-    NeuralNetwork nn(layers);
-
-    MomentumOptimizer optimizer(0.01, 0.9);  // Learning rate and momentum
-
-    MSELoss loss;
-
-
-    NeuralNet::DataHandler trainHandler;
-    trainHandler.readData(
-            "/Users/fuckingbell/programming/nn-from-scratch/data/mnist_test.csv");
-    std::cout << "rows read by dataHandler: " << trainHandler.getNumberOfSamples()
-              << std::endl;
-
-    int batchSize = 5;
-    int epochs = 10000;
 
     // Training loop
     for (int epoch = 0; epoch < epochs; epoch++)
@@ -127,6 +105,43 @@ int main()
         std::cout << "Epoch " << epoch << ", Loss: " << calculateMean(losses)
                   << std::endl;
     }
+    return 1;
+}
+
+int main()
+{
+    CAnyLayer layer1 = LinearLayer(784, 300);
+    CAnyLayer activation1 = SigmoidLayer(300);
+    CAnyLayer layer2 = LinearLayer(300, 100);
+    CAnyLayer activation2 = SigmoidLayer(100);
+    CAnyLayer layer3 = LinearLayer(100, 10);
+    CAnyLayer activation3 = SoftmaxLayer();
+
+    NeuralNetwork nn;
+    nn.addLayer(layer1);
+    nn.addLayer(activation1);
+    nn.addLayer(layer2);
+    nn.addLayer(activation2);
+    nn.addLayer(layer3);
+    nn.addLayer(activation3);
+
+    MomentumOptimizer optimizer(0.01, 0.9);  // Learning rate and momentum
+
+    MSELoss loss;
+
+
+    DataHandler trainHandler;
+    trainHandler.readData(
+            "/Users/fuckingbell/programming/nn-from-scratch/data/mnist_test.csv");
+    std::cout << "rows read by dataHandler: " << trainHandler.getNumberOfSamples()
+              << std::endl;
+
+
+    int batchSize = 5;
+    int epochs = 10000;
+
+    trainNN(nn, loss, optimizer, trainHandler, batchSize, epochs);
+
 
     return 0;
 }

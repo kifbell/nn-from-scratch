@@ -16,7 +16,7 @@ using Matrix = Eigen::MatrixXd;
 
 
 template<class TBase>
-class ILayer: public TBase
+class ILayer : public TBase
 {
 public:
     virtual Vector passForward(const Vector &input) = 0;
@@ -34,12 +34,12 @@ public:
 
     Vector passForward(const Vector &input) override
     {
-        return CBase::passForward(input);
+        return CBase::Object().passForward(input);
     }
 
     Vector backprop(Optimizer &optimizer, const Vector &u) override
     {
-        return CBase::backprop(optimizer, u);
+        return CBase::Object().backprop(optimizer, u);
     }
 
 };
@@ -60,13 +60,10 @@ class LinearLayer
 {
 private:
     Matrix z_cache;
-
-public:
     Matrix weights_;
     Vector bias_;
-
     std::map<std::string, Matrix> optimizerState_;
-
+public:
     LinearLayer(int input_size, int output_size)
             : weights_(Matrix::Random(output_size, input_size)),
               bias_(Vector::Random(output_size))
@@ -82,8 +79,8 @@ class ReLULayer
 {
 private:
     Matrix dsigma;  // Matrix to store the derivatives
-public:
     std::map<std::string, Matrix> optimizerState;
+public:
 
     explicit ReLULayer(int size) : dsigma(size, size)
     {}
@@ -99,8 +96,8 @@ class SigmoidLayer
 {
 private:
     Matrix dsigma;  // Matrix to store the derivatives
-public:
     std::map<std::string, Matrix> optimizerState;
+public:
 
     explicit SigmoidLayer(int size) : dsigma(size, size)
     {}
@@ -130,6 +127,5 @@ public:
     Vector backprop(Optimizer &optimizer, const Vector &u);
 };
 }
-
 
 #endif //LAYER_HPP
