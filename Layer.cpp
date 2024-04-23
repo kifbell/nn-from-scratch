@@ -54,49 +54,6 @@ Vector LinearLayer::backprop(Optimizer &optimizer, const Vector &u)
 };
 
 
-Vector ReLULayer::passForward(const Vector &input)
-{
-    Matrix output = input.unaryExpr(
-            [](double elem) { return std::max(0.0, elem); });
-
-    dsigma = input.unaryExpr(
-            [](double elem) { return elem > 0 ? 1.0 : 0.0; }).asDiagonal();
-
-    return output;
-}
-
-Vector ReLULayer::backprop(Optimizer &, const Vector &u)
-{
-    return dsigma * u;
-}
-
-
-Vector SigmoidLayer::passForward(const Vector &input)
-{
-    Vector output = input.unaryExpr([](double elem) {
-        return 1.0 / (1.0 + std::exp(-elem));
-    }); // fixme this is 1, dsigma is then 0
-
-//    std::cout << "output.transpose()" << std::endl;
-//    std::cout << output.transpose() << std::endl;
-
-    // Recalculate dsigma based on the output of the sigmoid function
-    dsigma = output.unaryExpr(
-            [](double y) {
-                return y * (1.0 - y);
-            }).asDiagonal();
-
-    return output;
-}
-
-Vector SigmoidLayer::backprop(Optimizer &, const Vector &u)
-{
-//    std::cout << "dsigma" << std::endl;
-//    std::cout << dsigma << std::endl;
-    return dsigma * u;
-}
-
-
 Vector SoftmaxLayer::passForward(const Vector &input)
 {
     lastInput_ = input;
@@ -107,8 +64,10 @@ Vector SoftmaxLayer::passForward(const Vector &input)
 }
 
 
-
-Matrix SoftmaxLayer::getJacobian(Vector& output){
+Matrix SoftmaxLayer::getJacobian(Vector &output)
+{
+//    std::cout <<"getJacobian output "<< std::endl;
+//    std::cout << output.transpose() << std::endl;
 
     int dim = output.size();
     Matrix jacobian(dim, dim);
@@ -126,6 +85,9 @@ Matrix SoftmaxLayer::getJacobian(Vector& output){
             }
         }
     }
+
+//            std::cout << jacobian.transpose() << std::endl;
+
     return jacobian;
 }
 

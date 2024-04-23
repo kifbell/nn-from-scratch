@@ -74,40 +74,6 @@ public:
     Vector backprop(Optimizer &optimizer, const Vector &u);
 };
 
-
-class ReLULayer
-{
-private:
-    Matrix dsigma;  // Matrix to store the derivatives
-    std::map<std::string, Matrix> optimizerState;
-public:
-
-    explicit ReLULayer(int size) : dsigma(size, size)
-    {}
-
-    Vector passForward(const Vector &input);
-
-    Vector backprop(Optimizer &optimizer, const Vector &u);
-
-};
-
-
-class SigmoidLayer
-{
-private:
-    Matrix dsigma;  // Matrix to store the derivatives
-    std::map<std::string, Matrix> optimizerState;
-public:
-
-    explicit SigmoidLayer(int size) : dsigma(size, size)
-    {}
-
-    Vector passForward(const Vector &input);
-
-    Vector backprop(Optimizer &optimizer, const Vector &u);
-};
-
-
 class SoftmaxLayer
 {
 private:
@@ -125,6 +91,46 @@ public:
     Matrix getJacobian(Vector &output);
 
     Vector backprop(Optimizer &optimizer, const Vector &u);
+};
+
+
+class CwiseActivation
+{
+    using Function = std::function<double(double)>;
+public:
+    CwiseActivation(Function f0, Function f1) : f0_(std::move(f0)), f1_(std::move(f1))
+    {}
+
+    Vector passForward(const Vector &input)
+    {
+        return input.unaryExpr(f0_);
+    }
+
+    Vector backprop(Optimizer &, const Vector &u)
+    {
+        return u.unaryExpr(f1_);
+    }
+
+    static CwiseActivation ReLu()
+    {
+        return CwiseActivation(
+                [](double x) { return x * (x > 0); },
+                [](double x) { return x > 0; }
+        );
+    }
+
+    static CwiseActivation Sigmoid()
+    {
+        return CwiseActivation(
+                [](double x) { return 1.0 / (1.0 + std::exp(-x)); },
+                [](double x) { return x * (1 - x); }
+        );
+    }
+
+
+private:
+    Function f0_;
+    Function f1_;
 };
 }
 
