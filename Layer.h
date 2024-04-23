@@ -3,6 +3,7 @@
 
 #include <Eigen/Dense>
 #include "Optimizer.h"
+#include "AnyMovable.h"
 #include <map>
 #include <string>
 
@@ -14,20 +15,51 @@ using Vector = Eigen::VectorXd;
 using Matrix = Eigen::MatrixXd;
 
 
-class Layer
+template<class TBase>
+class ILayer: public TBase
 {
 public:
     virtual Vector passForward(const Vector &input) = 0;
 
-    virtual Vector
-    backprop(Optimizer &optimizer, const Vector &u) = 0;
+    virtual Vector backprop(Optimizer &optimizer, const Vector &u) = 0;
+};
+
+
+template<class TBase, class TObject>
+class CLayerImpl : public TBase
+{
+    using CBase = TBase;
+public:
+    using CBase::CBase;
+
+    Vector passForward(const Vector &input) override
+    {
+        return CBase::passForward(input);
+    }
+
+    Vector backprop(Optimizer &optimizer, const Vector &u) override
+    {
+        return CBase::backprop(optimizer, u);
+    }
 
 };
 
-class LinearLayer : public Layer
+class CAnyLayer : public NSLibrary::CAnyMovable<ILayer, CLayerImpl>
+{
+    using CBase = NSLibrary::CAnyMovable<ILayer, CLayerImpl>;
+public:
+    using CBase::CBase;
+
+//    friend bool operator==(const CAnyLayer &, const CAnyLayer &)
+//    {
+//    }
+};
+
+
+class LinearLayer
 {
 private:
-    Matrix z_cache;  // Cache to store input for backpropagation
+    Matrix z_cache;
 
 public:
     Matrix weights_;
@@ -40,13 +72,13 @@ public:
               bias_(Vector::Random(output_size))
     {}
 
-    Vector passForward(const Vector &input) override;
+    Vector passForward(const Vector &input);
 
-    Vector backprop(Optimizer &optimizer, const Vector &u) override;
+    Vector backprop(Optimizer &optimizer, const Vector &u);
 };
 
 
-class ReLULayer : public Layer
+class ReLULayer
 {
 private:
     Matrix dsigma;  // Matrix to store the derivatives
@@ -56,14 +88,14 @@ public:
     explicit ReLULayer(int size) : dsigma(size, size)
     {}
 
-    Vector passForward(const Vector &input) override;
+    Vector passForward(const Vector &input);
 
-    Vector backprop(Optimizer &optimizer, const Vector &u) override;
+    Vector backprop(Optimizer &optimizer, const Vector &u);
 
 };
 
 
-class SigmoidLayer : public Layer
+class SigmoidLayer
 {
 private:
     Matrix dsigma;  // Matrix to store the derivatives
@@ -73,13 +105,13 @@ public:
     explicit SigmoidLayer(int size) : dsigma(size, size)
     {}
 
-    Vector passForward(const Vector &input) override;
+    Vector passForward(const Vector &input);
 
-    Vector backprop(Optimizer &optimizer, const Vector &u) override;
+    Vector backprop(Optimizer &optimizer, const Vector &u);
 };
 
 
-class SoftmaxLayer : public Layer
+class SoftmaxLayer
 {
 private:
     Vector lastInput_;
@@ -91,11 +123,11 @@ public:
     ~SoftmaxLayer()
     {}
 
-    Vector passForward(const Vector &input) override;
+    Vector passForward(const Vector &input);
 
-    Matrix getJacobian(Vector& output);
+    Matrix getJacobian(Vector &output);
 
-    Vector backprop(Optimizer &optimizer, const Vector &u) override;
+    Vector backprop(Optimizer &optimizer, const Vector &u);
 };
 }
 

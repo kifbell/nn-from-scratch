@@ -20,12 +20,17 @@ namespace NeuralNet
 class NeuralNetwork
 {
 private:
-    std::vector<std::shared_ptr<Layer>> layers;
+    std::vector<CAnyLayer> layers;
 
 public:
-    NeuralNetwork(const std::vector<std::shared_ptr<Layer>> &init_layers) : layers(
-            init_layers)
-    {}
+    NeuralNetwork()
+    {
+    }
+
+    void addLayer(CAnyLayer &layer)
+    {
+        layers.push_back(std::move(layer));
+    }
 
     Vector passForward(const Vector &input)
     {
