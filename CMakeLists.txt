@@ -8,11 +8,10 @@ include_directories(${CMAKE_SOURCE_DIR}/eigen)
 include_directories(${CMAKE_SOURCE_DIR}/EigenRand)
 
 add_executable(nn_from_scratch main.cpp
-        Optimizer.cpp
-        Layer.cpp
         DataHandler.cpp
+        Layer.cpp
         Loss.cpp
         NeuralNetwork.cpp
-
+        Optimizer.cpp
 )
 #add_executable(nn_from_scratch Optimizer.cpp)
