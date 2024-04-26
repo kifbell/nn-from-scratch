@@ -32,8 +32,8 @@ void MomentumOptimizer::update(Eigen::MatrixXd &weights,
 //    std::cout << "velocityWeights" << std::endl;
 //    std::cout << optimizerState["velocityWeights"] << std::endl;
 
-    weights -= learningRate * optimizerState["velocityWeights"];
+    weights -= lr_ * optimizerState["velocityWeights"];
 //    std::cout <<  optimizerState["velocityWeights"] <<std::endl;
 //    std::cout <<  gradientWeights <<std::endl;
-    biases -= learningRate * optimizerState["velocityBiases"];
+    biases -= lr_ * optimizerState["velocityBiases"];
 }

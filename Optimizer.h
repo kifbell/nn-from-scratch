@@ -11,13 +11,10 @@
 
 class Optimizer
 {
+private:
+    double lr_;
 public:
-    Optimizer() = default;
-
-    ~Optimizer() = default;
-
     virtual void update(
-//            Layer& layer
             Eigen::MatrixXd &weights,
             Eigen::VectorXd &bias,
             const Eigen::MatrixXd &gradientWeights,
@@ -25,18 +22,19 @@ public:
             std::map<std::string, Eigen::MatrixXd> &optimizerState
     ) = 0;
 
+    void lrUpdate(double lrNew)
+    { lr_ = lrNew; }
+
 };
 
 class MomentumOptimizer : public Optimizer
 {
 private:
-    double learningRate;
+    double lr_;
     double momentum;
-//    std::unique_ptr<MomentumOptimizerState> state;  // Encapsulates the state
-
 public:
 
-    MomentumOptimizer(double lr, double m) : learningRate(lr), momentum(m)
+    MomentumOptimizer(double lr, double m) : lr_(lr), momentum(m)
     {
 
     }
@@ -50,7 +48,6 @@ public:
                 std::map<std::string, Eigen::MatrixXd> &optimizerState
     ) override;
 
-    // Additional methods as necessary
 };
 
 #endif //NN_OPTIMIZER_H
