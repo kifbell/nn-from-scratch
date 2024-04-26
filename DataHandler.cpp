@@ -36,7 +36,7 @@ void NeuralNet::DataHandler::readData(const std::string &filename)
 
 
     features_.resize(numRows, numCols);
-    labels_.reserve(numRows);
+    labels_.resize(numRows);
 
     int rowIndex = 0;
     std::string cell;
@@ -45,7 +45,7 @@ void NeuralNet::DataHandler::readData(const std::string &filename)
         std::stringstream lineStream(line);
 
         getline(lineStream, cell, ',');
-        labels_.push_back(stoi(cell));
+        labels_(rowIndex) = stoi(cell);
 
         int colIndex = 0;
         while (getline(lineStream, cell, ','))

@@ -11,10 +11,28 @@
 namespace NeuralNet
 {
 
+using Vector = Eigen::VectorXd;
+using Matrix = Eigen::MatrixXd;
+
+
+class Random
+{
+public:
+    int uniform_int(int a, int b)
+    {
+        std::uniform_int_distribution<> distr(a, b);
+        return distr(engine_);
+    }
+
+private:
+    static constexpr int kSeed = 42;
+    std::mt19937 engine_{kSeed};
+};
+
 
 struct DataBatch
 {
-    std::vector<int> labels;
+   Vector labels;
     Eigen::MatrixXd features;
 
     DataBatch(int batchSize, int numFeatures) : labels(batchSize),
@@ -26,29 +44,30 @@ struct DataBatch
 class DataHandler
 {
 private:
-    std::vector<int> labels_;
-    Eigen::MatrixXd features_;
+    Vector labels_;
+    Matrix features_;
     size_t currentBatchIndex = 0;
 
 public:
-    DataHandler()=default;
+    DataHandler() = default;
 
 
     const DataBatch getRandomBatch(int batchSize)
     {
+        static Random rnd;
 
         DataBatch batch(batchSize, features_.cols());
 
-        std::random_device rd;
-        std::mt19937 eng(rd());
         std::uniform_int_distribution<> distr(0, labels_.size() - 1);
-
+        std::vector<int> indices;
         for (int i = 0; i < batchSize; i++)
         {
-            int index = distr(eng);
-            batch.labels[i] = labels_[index];
-            batch.features.row(i) = features_.row(index);
+            int index = rnd.uniform_int(0, labels_.size() - 1);
+            indices.push_back(index);
         }
+
+        batch.labels = labels_(indices);
+        batch.features = features_(indices, Eigen::placeholders::all);
 
         return batch;
     }
