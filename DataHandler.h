@@ -32,7 +32,7 @@ private:
 
 struct DataBatch
 {
-   Vector labels;
+    Vector labels;
     Eigen::MatrixXd features;
 
     DataBatch(int batchSize, int numFeatures) : labels(batchSize),

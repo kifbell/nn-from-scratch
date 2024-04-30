@@ -20,22 +20,22 @@ namespace NeuralNet
 class NeuralNetwork
 {
 private:
-    std::vector<CAnyLayer> layers;
+    std::vector<CAnyLayer> layers_;
 
 public:
     NeuralNetwork()
     {
     }
 
-    void addLayer(CAnyLayer &layer)
+    void addLayer(CAnyLayer &&layer)
     {
-        layers.push_back(std::move(layer));
+        layers_.push_back(std::move(layer));
     }
 
-    Vector passForward(const Vector &input)
+    Matrix passForward(const Matrix &input)
     {
-        Vector current_output = input;
-        for (auto &layer: layers)
+        Matrix current_output = input;
+        for (auto &layer: layers_)
         {
             current_output = layer->passForward(current_output);
         }
@@ -45,11 +45,13 @@ public:
     void backprop(Optimizer &optimizer, const Vector &output_gradient)
     {
         Vector current_gradient = output_gradient;
-        for (auto it = layers.rbegin(); it != layers.rend(); ++it)
+        for (auto it = layers_.rbegin(); it != layers_.rend(); ++it)
         {
+//            std::cout << "current_gradient.transpose() " << current_gradient.transpose() << std::endl;
             current_gradient = (*it)->backprop(optimizer, current_gradient);
         }
     }
+
 };
 }
 
