@@ -74,8 +74,8 @@ private:
     std::map<std::string, Matrix> optimizerState_;
 public:
     LinearLayer(int input_size, int output_size)
-            : weights_(Matrix::Random(output_size, input_size)),
-              bias_(Vector::Random(output_size))
+            : weights_(Matrix::Random(output_size, input_size)+Matrix::Random(output_size, input_size)),
+              bias_(Vector::Random(output_size)+Vector::Random(output_size))
     {}
 
     Matrix passForward(const Matrix &input);
@@ -122,7 +122,7 @@ public:
 //        std::cout << "sigmoidInput.shape " << input.rows() << ' ' << input.cols()
 //                  << std::endl;
         zCache_ = input;
-        Matrix ans = input.unaryExpr(f0_);
+//        Matrix ans = input.unaryExpr(f0_);
 //        std::cout << "sigmoid.shape " << ans.rows() << ' ' << ans.cols() << std::endl;
         return input.unaryExpr(f0_);
     }

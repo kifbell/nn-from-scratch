@@ -113,7 +113,7 @@ int trainNN(NeuralNetwork &nn,
     int runsInEpoch = trainHandler.getNumberOfSamples() / batchSize;
     for (int epoch = 0; epoch < epochs; epoch++)
     {
-        double lrCrt= lr  / (1 + lrDecay * epoch);
+        double lrCrt= lr / (1 + lrDecay * epoch);
         optimizer.lrUpdate(lrCrt);
         for (int batchRun = 0; batchRun < runsInEpoch; batchRun++)
         {
@@ -126,7 +126,7 @@ int trainNN(NeuralNetwork &nn,
 //            batch.features.transpose() // todo check the shape
 
             Matrix prediction = nn.passForward(
-                    batch.features.transpose());// todo check the shape
+                    batch.features.transpose() / 255);// todo check the shape
 //            std::cout << "prediction.shape " << prediction.rows() << ' ' << prediction.cols() << std::endl;
 
             Matrix targetVectors = labelsToOneHot(batch.labels);
@@ -201,7 +201,7 @@ int main()
     int batchSize = 35;
     int epochs = 100;
 
-    double lr = 0.5;
+    double lr = 0.1;
     double lrDecay = 0.9;
     MomentumOptimizer optimizer(lr, 0.9);  // Learning rate and momentum
 

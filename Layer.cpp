@@ -42,7 +42,7 @@ Vector LinearLayer::backprop(Optimizer &optimizer, const Vector &u)
     for (size_t idx = 0;
          idx < batchSize; ++idx)  // try suboptimal implementation for now
     {
-        deltaA = deltaA + u * zCache_.col(idx);
+        deltaA = deltaA + u * zCache_.col(idx).transpose();
     }
     deltaA = deltaA / batchSize;
     Vector deltaB = u;  // (dσ)^T * u^T
