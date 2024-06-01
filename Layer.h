@@ -7,6 +7,7 @@
 #include <map>
 #include <string>
 #include <iostream>
+#include <cmath>
 
 
 namespace NeuralNet
@@ -71,7 +72,7 @@ private:
     Matrix zCache_;
     Matrix weights_;
     Vector bias_;
-    std::map<std::string, Matrix> optimizerState_;
+    OptimizerState optimizerState_;
 public:
     LinearLayer(int input_size, int output_size)
             : weights_(Matrix::Random(output_size, input_size)+Matrix::Random(output_size, input_size)),
@@ -129,12 +130,17 @@ public:
 
     Matrix backprop(Optimizer &, const Vector &u)
     {
+//        std::cout <<  "Activation u.T" << u.transpose() <<std::endl;
+
 //        Matrix jacobian = Matrix::Zero(u.rows(), u.rows());
         int batchSize = zCache_.cols();
         Matrix jacobian = passForward(zCache_).unaryExpr(
                 f1_).rowwise().mean().asDiagonal();
+//        std::cout <<  "forward" << passForward(zCache_).transpose() <<std::endl;
+//        std::cout <<  "jacobian" << jacobian <<std::endl;
 //        std::cout <<  "jacobian shape "<< jacobian.rows() << jacobian.cols() <<std::endl;
 //        std::cout <<  "jacobian shape "<< zCache_.rows() << zCache_.rows() <<std::endl;
+//        std::cout <<  "zCache_ "<< zCache_ <<std::endl;
         return jacobian * u;
 //        size * batchsize
 //
@@ -163,6 +169,14 @@ public:
         return CwiseActivation(
                 [](double x) { return 1.0 / (1.0 + std::exp(-x)); },
                 [](double y) { return y * (1 - y); }
+        );
+    }
+
+    static CwiseActivation Tanh()
+    {
+        return CwiseActivation(
+                [](double x) { return std::tanh(x); },
+                [](double y) { return 1.0 - std::pow(std::tanh(y), 2); }
         );
     }
 };

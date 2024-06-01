@@ -30,10 +30,8 @@ void NeuralNet::DataHandler::readData(const std::string &filename)
         }
     }
 
-
     file.clear();
     file.seekg(oldPos);
-
 
     features_.resize(numRows, numCols);
     labels_.resize(numRows);
@@ -54,4 +52,29 @@ void NeuralNet::DataHandler::readData(const std::string &filename)
         }
         rowIndex++;
     }
+    indices_.resize(getNumberOfSamples());
+    std::iota(indices_.begin(), indices_.end(), 0);
+}
+
+void NeuralNet::DataHandler::shuffleIndices()
+{
+    static Random rnd;
+    currentBatchIndex = 0;
+    std::shuffle(indices_.begin(), indices_.end(), rnd.engine_);
+    return;
+//    https://stackoverflow.com/a/61997758
+//    Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic> permX(
+//            getNumberOfSamples());
+//
+//    features_.setIdentity();
+//
+//    std::shuffle(permX.indices().data(),
+//                 permX.indices().data() + permX.indices().size(), rnd.engine_);
+//    std::cout << "end shuffle " << std::endl;
+//    std::cout << permX(Eigen::seqN(currentBatchIndex, 10)) << std::endl;
+//    featuresPer_ = permX * features_;
+//    labelsPer_ = permX * labels_;
+//
+//    std::cout << "end shuffle " << std::endl;
+//    int i = 1/(1-1);
 }

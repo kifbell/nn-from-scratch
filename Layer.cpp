@@ -20,11 +20,12 @@ Matrix LinearLayer::passForward(const Matrix &input)
 //    assert(0);
     zCache_ = input;
 //    std::cout << "LinearInput.shape " << input.rows() << ' ' << input.cols() << std::endl;
+//    std::cout << "LinearInput.shape " << input.transpose() << std::endl;
     int batchSize = input.cols();
     Matrix bias = bias_.replicate(1, batchSize);
 //    M*N N*K + M
     Matrix ans = weights_ * input + bias;
-//    std::cout << "Linear.shape " << ans.rows() << ' ' << ans.cols() << std::endl;
+//    std::cout << "Linear and  " << ans.transpose() << std::endl;
     return weights_ * input + bias;
 }
 
@@ -32,21 +33,35 @@ Vector LinearLayer::backprop(Optimizer &optimizer, const Vector &u)
 {
 //    std::cout << "LinearLayer.backprop" << std::endl;
     // Store original weights and biases for later comparison
-    Matrix originalWeights = weights_;
-    Vector originalBiases = bias_;
+//    Matrix originalWeights = weights_;
+//    Vector originalBiases = bias_;
 
 //    Matrix deltaA = u * zCache_.transpose();  // (dσ)^T * u^T * z^T
     Matrix deltaA = Matrix::Zero(weights_.rows(), weights_.cols());
     int batchSize = zCache_.cols();
+//    std::cout << "zCache_.transpose() " << zCache_.transpose() << std::endl;
+//    std::cout <<"u  " <<  u << std::endl;
+//    std::cout <<"u shape " <<  u.rows()<< " " << u.cols()<< std::endl;
 
     for (size_t idx = 0;
          idx < batchSize; ++idx)  // try suboptimal implementation for now
     {
-        deltaA = deltaA + u * zCache_.col(idx).transpose();
+        Matrix grad = u * zCache_.col(idx).transpose();
+//        std::cout <<"grad shape " <<  grad.rows()<< " " << grad.cols()<< std::endl;
+        assert(
+                ((grad.rows() == deltaA.rows()) && grad.cols() == deltaA.cols()()) &&
+                "Weights should have changed after optimization.");
+        deltaA = deltaA + grad;
     }
+
+//    std::cout << "u.shape: " << u.rows() << " " <<u.cols() << std::endl;
+//    std::cout << "zCache_.col(0).shape: " << zCache_.col(0).rows() << " " << zCache_.col(0).cols() << std::endl;
+//    std::cout << "(u* zCache_.col(0).transpose()).shape: " << (u* zCache_.col(0).transpose()).rows() << " " << (u* zCache_.col(0).transpose()).cols() << std::endl;
+
     deltaA = deltaA / batchSize;
     Vector deltaB = u;  // (dσ)^T * u^T
-//    std::cout << deltaA << std::endl;
+//    std::cout << "deltaA: " << deltaA << std::endl;
+//    std::cout << "deltaB.transpose(): " << deltaB.transpose() << std::endl;
 //    std::cout << u.transpose() << std::endl;
 //    std::cout << "u.transpose()" << std::endl;
 //    std::cout << u.transpose() << std::endl;
@@ -97,62 +112,45 @@ Matrix SoftmaxLayer::passForward(const Matrix &input)
 }
 
 
-Matrix SoftmaxLayer::getJacobian(const Matrix &output)
-{
-//    std::cout <<"getJacobian output "<< std::endl;
-//    std::cout << output.cols()<< std::endl;
-
-    assert(output.cols() == 1 && "only n by 1 matrices are accepted.");
-
-    int dim = output.size();
-    Matrix jacobian(dim, dim);
-
-    for (int i = 0; i < dim; ++i)
-    {
-        for (int j = 0; j < dim; ++j)
-        {
-            if (i == j)
-            {
-                jacobian(i, j) = output(i) * (1 - output(i));
-            } else
-            {
-                jacobian(i, j) = -output(i) * output(j);
-            }
-        }
-    }
-
-//            std::cout << jacobian.transpose() << std::endl;
-
-    return jacobian;
-}
+//Matrix SoftmaxLayer::getJacobian(const Matrix &output)
+//{
+////    std::cout <<"getJacobian output "<< std::endl;
+////    std::cout << output.cols()<< std::endl;
+//
+//    assert(output.cols() == 1 && "only n by 1 matrices are accepted.");
+//
+//    int dim = output.size();
+//    Matrix jacobian(dim, dim);
+//
+//    for (int i = 0; i < dim; ++i)
+//    {
+//        for (int j = 0; j < dim; ++j)
+//        {
+//            if (i == j)
+//            {
+//                jacobian(i, j) = output(i) * (1 - output(i));
+//            } else
+//            {
+//                jacobian(i, j) = -output(i) * output(j);
+//            }
+//        }
+//    }
+//    return jacobian;
+//}
 
 
 Vector SoftmaxLayer::backprop(Optimizer &, const Vector &u)
 {
     Matrix jacobian = Matrix(u.rows(), u.rows());
-//    std::cout << "SoftmaxLayer zCache_.size() = "<< zCache_.size() << std::endl;
-//    std::cout << zCache_.rows() << std::endl;
-//    std::cout << zCache_ << std::endl;
     int batchSize = zCache_.cols();
-//    std::cout << "batchSize.transpose() " << batchSize << std::endl;
-
-
     Matrix output = passForward(zCache_);
-//    .unaryExpr(f1_).rowwise().mean().asDiagonal();
-//    std::cout << "jacobian shape " << jacobian.rows() << jacobian.cols() << std::endl;
-//    std::cout << "jacobian shape " << zCache_.rows() << zCache_.rows() << std::endl;
     for (size_t idx = 0; idx < batchSize; ++idx)
     {
-//        std::cout << "soft max shape " << zCache_.rows() << zCache_.cols() << std::endl;
-//        std::cout << "lastOutput" << output.col(idx).transpose() << std::endl;
-        jacobian = jacobian + getJacobian(output.col(idx));
-//        std::cout << "jacobian" << jacobian << std::endl;
+//        jacobian = jacobian + getJacobian(output.col(idx));
+        Matrix diagonal = output.col(idx).asDiagonal();
+        jacobian = jacobian + diagonal - output.col(idx) * output.col(idx).transpose();
     }
-//    std::cout << "SoftmaxLayer.result() " << jacobian * u / batchSize << std::endl;
-
     return jacobian * u / batchSize; // fixme isn't it u * sigma
 }
-
-
 }
 

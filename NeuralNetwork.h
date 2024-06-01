@@ -13,7 +13,19 @@
 #include "Layer.h"
 #include "Optimizer.h"
 #include "DataHandler.h"
+#include "Loss.h"
+#include "Utils.h"
 
+
+struct InferenceResult
+{
+    double loss;
+    int numberCorrect;
+
+    InferenceResult(double l, int nc) : loss(l), numberCorrect(nc)
+    {}
+
+};
 namespace NeuralNet
 {
 
@@ -27,31 +39,29 @@ public:
     {
     }
 
-    void addLayer(CAnyLayer &&layer)
-    {
-        layers_.push_back(std::move(layer));
-    }
+    void addLayer(CAnyLayer &&layer);
 
-    Matrix passForward(const Matrix &input)
-    {
-        Matrix current_output = input;
-        for (auto &layer: layers_)
-        {
-            current_output = layer->passForward(current_output);
-        }
-        return current_output;
-    }
+    Matrix passForward(const Matrix &input);
 
-    void backprop(Optimizer &optimizer, const Vector &output_gradient)
-    {
-        Vector current_gradient = output_gradient;
-        for (auto it = layers_.rbegin(); it != layers_.rend(); ++it)
-        {
-//            std::cout << "current_gradient.transpose() " << current_gradient.transpose() << std::endl;
-            current_gradient = (*it)->backprop(optimizer, current_gradient);
-        }
-    }
+    void backprop(Optimizer &optimizer, const Vector &output_gradient);
 
+    void trainOnEpoch(CAnyLoss &loss,
+                      Optimizer &optimizer,
+                      DataHandler &trainHandler,
+                      int epoch,
+                      int batchSize,
+                      const int numClasses,
+                      int scale
+    );
+
+
+    InferenceResult inferBatch(
+            CAnyLoss &loss,
+            DataBatch evalBatch,
+            const int numClasses,
+            int scale
+    );
+//
 };
 }
 

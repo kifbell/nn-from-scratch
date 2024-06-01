@@ -13,5 +13,6 @@ add_executable(nn_from_scratch main.cpp
         Loss.cpp
         NeuralNetwork.cpp
         Optimizer.cpp
+        Utils.cpp
 )
 #add_executable(nn_from_scratch Optimizer.cpp)

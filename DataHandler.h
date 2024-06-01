@@ -24,9 +24,9 @@ public:
         return distr(engine_);
     }
 
+    std::mt19937 engine_{kSeed};
 private:
     static constexpr int kSeed = 42;
-    std::mt19937 engine_{kSeed};
 };
 
 
@@ -45,8 +45,12 @@ class DataHandler
 {
 private:
     Vector labels_;
+    Vector labelsPer_;
     Matrix features_;
+    Matrix featuresPer_;
     size_t currentBatchIndex = 0;
+    std::vector<int> indices_;
+
 
 public:
     DataHandler() = default;
@@ -54,21 +58,11 @@ public:
 
     const DataBatch getRandomBatch(int batchSize)
     {
-        static Random rnd;
-
         DataBatch batch(batchSize, features_.cols());
-
-        std::uniform_int_distribution<> distr(0, labels_.size() - 1);
-        std::vector<int> indices;
-        for (int i = 0; i < batchSize; i++)
-        {
-            int index = rnd.uniform_int(0, labels_.size() - 1);
-            indices.push_back(index);
-        }
-
+        std::vector<int> indices(indices_.begin() + currentBatchIndex, indices_.begin() + currentBatchIndex + batchSize);
         batch.labels = labels_(indices);
         batch.features = features_(indices, Eigen::placeholders::all);
-
+        currentBatchIndex+=batchSize;
         return batch;
     }
 
@@ -81,7 +75,7 @@ public:
         for (int i = 0; i < numSamples; i++, currentBatchIndex++)
         {
             batch.labels[i] = labels_[currentBatchIndex];
-            batch.features.row(i) = features_.row(currentBatchIndex);
+            batch.features.row(i) = featuresPer_.row(currentBatchIndex);
         }
 
         return batch;
@@ -105,6 +99,7 @@ public:
     void readData(const std::string &filename);
 
     static void skipFirstLine(std::ifstream &file);
+    void shuffleIndices() ;
 };
 }
 
