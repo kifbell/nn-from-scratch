@@ -40,9 +40,8 @@ Matrix labelsToOneHot(const Vector &labels, const int numClasses)
 Vector calculateColwiseMean(const Eigen::MatrixXd &matrix)
 {
     if (matrix.rows() == 0)
-        return Vector();  // Return an empty vector if the matrix is empty
+        return Vector();
 
-    // Compute the mean of each column
     Vector mean = matrix.colwise().mean();
 
     return mean;
@@ -60,30 +59,23 @@ int countCorrectPredictions(const Matrix &predictions, const Matrix &targetVecto
 
     int correctCount = 0;
 
-
-    // Check if the corresponding entry in the target vector is 1
     for (int i = 0; i < predictions.cols(); ++i)
     {
         Eigen::Index predictedClass;
-        predictions.col(i).maxCoeff(
-                &predictedClass); // Get the index of the max element in the column
-//        std::cout << "predictedClass " << predictedClass  << std::endl;
+        predictions.col(i).maxCoeff(&predictedClass);
 
         if (targetVectors(predictedClass, i) == 1)
         {
             ++correctCount;
         }
     }
-
     return correctCount;
 }
 
 Vector calculateRowwiseMean(const Eigen::MatrixXd &matrix)
 {
     if (matrix.cols() == 0)
-        return Vector();  // Return an empty vector if the matrix is empty
-
-    // Compute the mean of each column
+        return Vector();
     Vector mean = matrix.rowwise().mean();
 
     return mean;

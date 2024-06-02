@@ -59,10 +59,6 @@ class CAnyLayer : public NSLibrary::CAnyMovable<ILayer, CLayerImpl>
     using CBase = NSLibrary::CAnyMovable<ILayer, CLayerImpl>;
 public:
     using CBase::CBase;
-
-//    friend bool operator==(const CAnyLayer &, const CAnyLayer &)
-//    {
-//    }
 };
 
 
@@ -120,40 +116,16 @@ public:
 
     Matrix passForward(const Matrix &input)
     {
-//        std::cout << "sigmoidInput.shape " << input.rows() << ' ' << input.cols()
-//                  << std::endl;
         zCache_ = input;
-//        Matrix ans = input.unaryExpr(f0_);
-//        std::cout << "sigmoid.shape " << ans.rows() << ' ' << ans.cols() << std::endl;
         return input.unaryExpr(f0_);
     }
 
     Matrix backprop(Optimizer &, const Vector &u)
     {
-//        std::cout <<  "Activation u.T" << u.transpose() <<std::endl;
-
-//        Matrix jacobian = Matrix::Zero(u.rows(), u.rows());
         int batchSize = zCache_.cols();
         Matrix jacobian = passForward(zCache_).unaryExpr(
                 f1_).rowwise().mean().asDiagonal();
-//        std::cout <<  "forward" << passForward(zCache_).transpose() <<std::endl;
-//        std::cout <<  "jacobian" << jacobian <<std::endl;
-//        std::cout <<  "jacobian shape "<< jacobian.rows() << jacobian.cols() <<std::endl;
-//        std::cout <<  "jacobian shape "<< zCache_.rows() << zCache_.rows() <<std::endl;
-//        std::cout <<  "zCache_ "<< zCache_ <<std::endl;
         return jacobian * u;
-//        size * batchsize
-//
-//        for (size_t idx = 0; idx < batchSize; ++idx)
-//        {
-//            std::cout <<  "activation shape "<< zCache_.rows() << zCache_.cols() <<std::endl;
-//
-//            Vector lastOutput = passForward(zCache_.col(idx));
-//            Matrix jacobianTmp = lastOutput.unaryExpr(f1_).asDiagonal();
-//            jacobian = jacobian + jacobianTmp;
-//        }
-        return jacobian * u / batchSize;
-        return u.unaryExpr(f1_);
     }
 
     static CwiseActivation ReLu()

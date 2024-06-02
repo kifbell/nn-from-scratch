@@ -23,13 +23,9 @@ MSELoss::computeLoss(
                 "Predictions and targets matrices must have the same dimensions.");
     }
 
-    // Calculate the element-wise difference
     Matrix diff = predictions - targets;
-
-    // Calculate the sum of squares for each column
     Vector sumOfSquares = diff.array().square().colwise().sum();
 
-    // Calculate the mean of the sum of squares
     return sumOfSquares;
 }
 

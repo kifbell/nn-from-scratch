@@ -38,7 +38,6 @@ void NeuralNetwork::backprop(Optimizer &optimizer, const Vector &output_gradient
     Vector current_gradient = output_gradient;
     for (auto it = layers_.rbegin(); it != layers_.rend(); ++it)
     {
-//        std::cout << "current_gradient.transpose() " << current_gradient.transpose() << std::endl;
         current_gradient = (*it)->backprop(optimizer, current_gradient);
     }
 }
@@ -96,16 +95,10 @@ RegressorResult NeuralNetwork::trainOnEpochRegressor(CAnyLoss &loss,
     for (int batchRun = 0; batchRun < runsInEpoch; batchRun++)
     {
         auto batch = trainHandler.getRandomBatch(batchSize);
-//        std::cout << "batch.features"<< batch.features.rows()<<batch.features.cols()<< std::endl;
-//        std::cout << "batch.labels"<< batch.labels.rows()<<batch.labels.cols()<< std::endl;
-//        std::cout << "batch.features"<< batch.features.transpose()<< std::endl;
-//        std::cout << "batch.labels"<< batch.labels.transpose()<< std::endl;
         Matrix prediction = passForward(batch.features.transpose());
         Vector lossVector = loss->computeLoss(prediction, batch.labels.transpose());
         Matrix gradients = loss->computeGradient(prediction, batch.labels.transpose());
-//        std::cout << gradients<< std::endl;
         Vector gradientMean = calculateRowwiseMean(gradients);
-//        std::cout << gradientMean<< std::endl;
         backprop(optimizer, gradientMean);
 
         std::cout << "Epoch: " << epoch
@@ -230,7 +223,6 @@ int NeuralNetwork::runMNISTTest()
 
     double lr = 0.3;
     double lrDecay = 0.5;
-//    MomentumOptimizer optimizer(lr, 0.9);  // Learning rate and momentum
     double learningRate = 0.001;
     double beta1 = 0.9;
     double beta2 = 0.999;
@@ -267,15 +259,6 @@ int NeuralNetwork::runSinTest()
     NeuralNetwork nn;
     nn.addLayer(std::move(layer1));
     nn.addLayer(std::move(activation1));
-//    for (int i = 0; i < 8; ++i)
-//    {
-//        CAnyLayer layer_ = LinearLayer(innerDim, innerDim);
-//        CAnyLayer activation_ = CwiseActivation::ReLu();
-//        nn.addLayer(std::move(layer_));
-//        nn.addLayer(std::move(activation_));
-//    }
-//    nn.addLayer(std::move(layer2));
-//    nn.addLayer(std::move(activation2));
     nn.addLayer(std::move(layer3));
 
     CAnyLoss loss = MSELoss();
@@ -300,16 +283,9 @@ int NeuralNetwork::runSinTest()
     );
 
 
-//    trainHandler.resetBatchIndex();
-//    DataBatch testBatch = trainHandler.getNextBatch(100);
-//    auto test_pred = nn.passForward(testBatch.features.transpose());
-//    std::cout << "test_pred" << test_pred.transpose() << std::endl;
-//    return 1;
-
 
     double step = 0.1;
     Eigen::VectorXd X = Eigen::VectorXd::LinSpaced(100, 0, inputDim);
-//    std::cout << "X " <<X<<std::endl;
 
     Eigen::VectorXd real_sin = X.array().sin();
 
@@ -324,15 +300,11 @@ int NeuralNetwork::runSinTest()
 
     trainHandler.resetBatchIndex();
     DataBatch batch = trainHandler.getNextBatch(290);
-//    std::cout << "got batch " << std::endl;
-//    std::cout << batch.labels.size() << std::endl;
     std::vector<double> y_train(batch.labels.data(),
                                 batch.labels.data() + batch.labels.size());
 
-//    std::cout << y_train.size() << std::endl;
     std::vector<double> X_in(y_train.end() - start, y_train.end());
     Eigen::VectorXd token = Eigen::Map<Eigen::VectorXd>(X_in.data(), X_in.size());
-//    std::cout << token << std::endl;
 
     for (int i = 0; i < 200; ++i)
     {
@@ -345,14 +317,10 @@ int NeuralNetwork::runSinTest()
         X_in.erase(X_in.begin());
     }
 
-//     Output the predicted values
     std::cout << "Predicted values: " << std::endl;
     for (const auto& val : Y_new) {
         std::cout << val << std::endl;
     }
-
-
-
     return 1;
 }
 
