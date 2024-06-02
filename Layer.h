@@ -74,9 +74,9 @@ private:
     Vector bias_;
     OptimizerState optimizerState_;
 public:
-    LinearLayer(int input_size, int output_size)
-            : weights_(Matrix::Random(output_size, input_size)+Matrix::Random(output_size, input_size)),
-              bias_(Vector::Random(output_size)+Vector::Random(output_size))
+    LinearLayer(int input_size, int output_size, double scale)
+            : weights_(Matrix::Random(output_size, input_size)/scale+Matrix::Random(output_size, input_size)/scale),
+              bias_(Vector::Random(output_size)/scale+Vector::Random(output_size)/scale)
     {}
 
     Matrix passForward(const Matrix &input);

@@ -14,5 +14,6 @@ add_executable(nn_from_scratch main.cpp
         NeuralNetwork.cpp
         Optimizer.cpp
         Utils.cpp
+        Except.cpp
 )
 #add_executable(nn_from_scratch Optimizer.cpp)

@@ -12,12 +12,7 @@ namespace NeuralNet
 
 Matrix LinearLayer::passForward(const Matrix &input)
 {
-//    std::cout << "forward zCache_.transpose()" << std::endl;
-
-//    std::cout << zCache_.transpose() << std::endl;
-//    std::cout << "weights" << std::endl;
-//    std::cout << weights << std::endl;
-//    assert(0);
+    assert((input.rows() == deltaA.cols()) && "Gradient shape misalignment.");
     zCache_ = input;
 //    std::cout << "LinearInput.shape " << input.rows() << ' ' << input.cols() << std::endl;
 //    std::cout << "LinearInput.shape " << input.transpose() << std::endl;
@@ -49,8 +44,8 @@ Vector LinearLayer::backprop(Optimizer &optimizer, const Vector &u)
         Matrix grad = u * zCache_.col(idx).transpose();
 //        std::cout <<"grad shape " <<  grad.rows()<< " " << grad.cols()<< std::endl;
         assert(
-                ((grad.rows() == deltaA.rows()) && grad.cols() == deltaA.cols()()) &&
-                "Weights should have changed after optimization.");
+                ((grad.rows() == deltaA.rows()) && grad.cols() == deltaA.cols()) &&
+                "Gradient shape misalignment.");
         deltaA = deltaA + grad;
     }
 

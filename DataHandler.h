@@ -75,7 +75,7 @@ public:
         for (int i = 0; i < numSamples; i++, currentBatchIndex++)
         {
             batch.labels[i] = labels_[currentBatchIndex];
-            batch.features.row(i) = featuresPer_.row(currentBatchIndex);
+            batch.features.row(i) = features_.row(currentBatchIndex);
         }
 
         return batch;

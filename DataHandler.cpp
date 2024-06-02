@@ -43,7 +43,7 @@ void NeuralNet::DataHandler::readData(const std::string &filename)
         std::stringstream lineStream(line);
 
         getline(lineStream, cell, ',');
-        labels_(rowIndex) = stoi(cell);
+        labels_(rowIndex) = stod(cell);
 
         int colIndex = 0;
         while (getline(lineStream, cell, ','))

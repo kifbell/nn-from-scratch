@@ -17,14 +17,20 @@
 #include "Utils.h"
 
 
-struct InferenceResult
+struct InferenceClassifierResult
 {
     double loss;
     int numberCorrect;
 
-    InferenceResult(double l, int nc) : loss(l), numberCorrect(nc)
+    InferenceClassifierResult(double l, int nc) : loss(l), numberCorrect(nc)
     {}
+};
 
+struct RegressorResult
+{
+    double loss;
+    RegressorResult(double l) : loss(l)
+    {}
 };
 namespace NeuralNet
 {
@@ -45,7 +51,7 @@ public:
 
     void backprop(Optimizer &optimizer, const Vector &output_gradient);
 
-    void trainOnEpoch(CAnyLoss &loss,
+    void trainOnEpochClassifier(CAnyLoss &loss,
                       Optimizer &optimizer,
                       DataHandler &trainHandler,
                       int epoch,
@@ -53,15 +59,46 @@ public:
                       const int numClasses,
                       int scale
     );
+    RegressorResult trainOnEpochRegressor(CAnyLoss &loss,
+                      Optimizer &optimizer,
+                      DataHandler &trainHandler,
+                      int epoch,
+                      int batchSize
+    );
 
 
-    InferenceResult inferBatch(
+    InferenceClassifierResult inferBatchClassifier(
             CAnyLoss &loss,
             DataBatch evalBatch,
             const int numClasses,
             int scale
     );
-//
+
+    int trainClassifier(
+                 CAnyLoss &loss,
+                 Optimizer &optimizer,
+                 DataHandler &trainHandler,
+                 DataHandler &evalHandler,
+                 int batchSize,
+                 int epochs,
+                 double lr,
+                 double lrDecay,
+                 const int numClasses);
+
+    int trainRegressor(
+                 CAnyLoss &loss,
+                 Optimizer &optimizer,
+                 DataHandler &trainHandler,
+                 int batchSize,
+                 int epochs,
+                 double lr,
+                 double lrDecay);
+
+    static int  runMNISTTest();
+
+    static int runSinTest();
+
+    static int runAllTests();
 };
 }
 
