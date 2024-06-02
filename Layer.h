@@ -2,149 +2,156 @@
 #define LAYER_HPP
 
 #include <Eigen/Dense>
-#include "OptimizerState.h"
 #include "Optimizer.h"
+#include "AnyMovable.h"
 #include <map>
+#include <string>
+#include <iostream>
+#include <cmath>
 
 
-class Layer
+namespace NeuralNet
 {
-protected:
+
+using Vector = Eigen::VectorXd;
+using Matrix = Eigen::MatrixXd;
+
+
+template<class TBase>
+class ILayer : public TBase
+{
+
+private:
+    Matrix zCache_;
 public:
-    Layer()
-    {};
+    virtual Matrix passForward(const Matrix &input) = 0;
 
-    ~Layer()
-    {};
-
-    virtual Eigen::VectorXd pass_forward(const Eigen::VectorXd &input) = 0;
-
-    virtual Eigen::VectorXd
-    backprop(Optimizer &optimizer, const Eigen::VectorXd &u) = 0;
-
-//    virtual Eigen::MatrixXd &getWeights() = 0;
-//    virtual Eigen::VectorXd &getBiases() = 0;
+    virtual Vector backprop(Optimizer &optimizer, const Vector &u) = 0;
 };
 
 
-//class LinearLayer : public Layer {
-//private:
-//    Eigen::MatrixXd z_cache;  // Cache to store input for backpropagation
-//    Eigen::MatrixXd weights;  // Matrix for weights
-//    Eigen::VectorXd bias;     // Vector for biases
-//    std::unique_ptr<OptimizerState> optimizerState;  // State managed by optimizer
-//
-//public:
-//    LinearLayer(int input_size, int output_size);
-//
-//    virtual Eigen::VectorXd pass_forward(const Eigen::VectorXd &input)=0;
-//
-//    virtual Eigen::VectorXd backprop(Optimizer &optimizer, const Eigen::VectorXd &u)=0;
-//
-//    virtual Eigen::MatrixXd &getWeights()=0;
-//    virtual Eigen::VectorXd &getBiases()=0;
-//
-//    OptimizerState *getState() const;
-//};
+template<class TBase, class TObject>
+class CLayerImpl : public TBase
+{
+    using CBase = TBase;
+    Matrix zCache_;
+    size_t inputCnt = 0;
+    size_t batchSize_;
+public:
+    using CBase::CBase;
 
-class LinearLayer : public Layer
+    Matrix passForward(const Matrix &input) override
+    {
+
+        return CBase::Object().passForward(input);
+    }
+
+    Vector backprop(Optimizer &optimizer, const Vector &u) override
+    {
+//        std::cout << "CLayerImpl SoftmaxLayer zCache_.size() = "<< zCache_.size() << std::endl;
+
+        return CBase::Object().backprop(optimizer, u);
+    }
+};
+
+class CAnyLayer : public NSLibrary::CAnyMovable<ILayer, CLayerImpl>
+{
+    using CBase = NSLibrary::CAnyMovable<ILayer, CLayerImpl>;
+public:
+    using CBase::CBase;
+};
+
+
+class LinearLayer
 {
 private:
-    Eigen::MatrixXd z_cache;  // Cache to store input for backpropagation
-
+    Matrix zCache_;
+    Matrix weights_;
+    Vector bias_;
+    OptimizerState optimizerState_;
 public:
-    Eigen::MatrixXd weights;
-    Eigen::VectorXd bias;
+    LinearLayer(int input_size, int output_size, double scale)
+            : weights_(Matrix::Random(output_size, input_size)/scale+Matrix::Random(output_size, input_size)/scale),
+              bias_(Vector::Random(output_size)/scale+Vector::Random(output_size)/scale)
+    {}
 
-    std::map<std::string, Eigen::MatrixXd> optimizerState;
+    Matrix passForward(const Matrix &input);
 
-    LinearLayer(int input_size, int output_size) : Layer()
-    {
-        // Random initialization of weights and biases for demonstration purposes
-        weights = Eigen::MatrixXd::Random(output_size, input_size);
-        bias = Eigen::VectorXd::Random(output_size);
+    Vector backprop(Optimizer &optimizer, const Vector &u);
 
+};
 
-//        optimizerState = nullptr;
-    }
+class SoftmaxLayer
+{
+private:
+    Matrix zCache_;
+    size_t inputCnt = 0;
+public:
+    SoftmaxLayer()
+    {}
 
-    ~LinearLayer()
-    {};
+    ~SoftmaxLayer()
+    {}
 
+    Matrix passForward(const Matrix &input);
 
-    // Forward pass which calculates Wx + b
-    Eigen::VectorXd pass_forward(const Eigen::VectorXd &input)
-    {
-        z_cache = input;  // Cache the input (z) for use in backpropagation
-        return weights * input + bias;  // Wx + b
-    }
+    Matrix getJacobian(const Matrix &output);
 
-    // Backpropagation method that updates weights and biases
-//    Eigen::VectorXd backprop(const Eigen::VectorXd &u)
-//    {
-    // Convert dsigma vector to a diagonal matrix
-//        Eigen::MatrixXd Dsigma = dsigma.asDiagonal();
-
-    // Calculate gradients
-//        Eigen::MatrixXd deltaA = u * z_cache.transpose();  // (dσ)^T * u^T * z^T
-//        Eigen::VectorXd deltaB = u;  // (dσ)^T * u^T
-
-    // Update weights and biases
-//        weights -= learning_rate * deltaA.transpose();  // Update weights
-//        bias -= learning_rate * deltaB;  // Update biases
-
-    // Calculate and return the gradient to pass to the previous layer
-//        Eigen::VectorXd u_bar = weights.transpose() * u;  // u * dσ * A
-//
-//        return u_bar;
-//    }
-
-//    template<class O>
-//    Eigen::VectorXd backprop(O &optimizer, const Eigen::MatrixXd &u)
-    Eigen::VectorXd backprop(Optimizer &optimizer, const Eigen::VectorXd &u)
-    {
-        // Store original weights and biases for later comparison
-        Eigen::MatrixXd originalWeights = this->weights;
-        Eigen::VectorXd originalBiases = this->bias;
-
-        Eigen::MatrixXd deltaA = u * z_cache.transpose();  // (dσ)^T * u^T * z^T
-        Eigen::VectorXd deltaB = u;  // (dσ)^T * u^T
-
-        // Copy current weights and biases for later comparison
-        Eigen::MatrixXd weightsBeforeUpdate = weights;
-        Eigen::VectorXd biasesBeforeUpdate = bias;
-
-        optimizer.update(
-                this->weights,
-                this->bias,
-                deltaA,
-                deltaB,
-                this->optimizerState
-        );
-
-
-        assert(!this->weights.isApprox(originalWeights) &&
-               "Weights should have changed after optimization.");
-        assert(!this->bias.isApprox(originalBiases) &&
-               "Biases should have changed after optimization.");
-
-
-        Eigen::VectorXd u_bar = weights.transpose() * u;  // u * dσ * A
-
-        return u_bar;
-    }
-
-    Eigen::MatrixXd &getWeights()
-    { return weights; }
-
-    Eigen::VectorXd &getBiases()
-    { return bias; }
-
-//    OptimizerState *getState() const
-//    { return optimizerState.get(); }
+    Vector backprop(Optimizer &optimizer, const Vector &u);
 
 };
 
 
-#endif //LAYER_HPP
+class CwiseActivation
+{
+    using Function = std::function<double(double)>;
+private:
+    Function f0_;
+    Function f1_;
+    Matrix zCache_;
+    size_t inputCnt = 0;
+public:
+    CwiseActivation(Function f0, Function f1) : f0_(std::move(f0)), f1_(std::move(f1))
+    {}
 
+    Matrix passForward(const Matrix &input)
+    {
+        zCache_ = input;
+        return input.unaryExpr(f0_);
+    }
+
+    Matrix backprop(Optimizer &, const Vector &u)
+    {
+        int batchSize = zCache_.cols();
+        Matrix jacobian = passForward(zCache_).unaryExpr(
+                f1_).rowwise().mean().asDiagonal();
+        return jacobian * u;
+    }
+
+    static CwiseActivation ReLu()
+    {
+        return CwiseActivation(
+                [](double x) { return x * (x > 0); },
+                [](double y) { return y > 0; }
+        );
+    }
+
+    static CwiseActivation Sigmoid()
+    {
+        return CwiseActivation(
+                [](double x) { return 1.0 / (1.0 + std::exp(-x)); },
+                [](double y) { return y * (1 - y); }
+        );
+    }
+
+    static CwiseActivation Tanh()
+    {
+        return CwiseActivation(
+                [](double x) { return std::tanh(x); },
+                [](double y) { return 1.0 - std::pow(std::tanh(y), 2); }
+        );
+    }
+};
+}
+
+#endif //LAYER_HPP

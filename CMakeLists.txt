@@ -2,14 +2,18 @@ cmake_minimum_required(VERSION 3.25)
 project(nn_from_scratch)
 
 set(CMAKE_CXX_STANDARD 23)
-
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Add this line to include Eigen library
 include_directories(${CMAKE_SOURCE_DIR}/eigen)
 include_directories(${CMAKE_SOURCE_DIR}/EigenRand)
 
-#enable_language(CUDA)  # Enable CUDA support in CMake
-
 add_executable(nn_from_scratch main.cpp
+        DataHandler.cpp
+        Layer.cpp
+        Loss.cpp
+        NeuralNetwork.cpp
         Optimizer.cpp
-        Layer.cpp)
+        Utils.cpp
+        Except.cpp
+)
 #add_executable(nn_from_scratch Optimizer.cpp)
