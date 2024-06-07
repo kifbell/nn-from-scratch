@@ -36,4 +36,23 @@ Matrix MSELoss::computeGradient(
 
     return 2.0 * (predictions - targets);
 }
+
+
+Vector CrossEntropyLoss::computeLoss(const Matrix &predictions, const Matrix &targets)
+{
+    if (predictions.rows() != targets.rows() || predictions.cols() != targets.cols())
+    {
+        throw std::invalid_argument("Predictions and targets matrices must have the same dimensions.");
+    }
+    return -(targets.array() * predictions.array().log().array()).colwise().sum();
+}
+
+Matrix CrossEntropyLoss::computeGradient(const Matrix &predictions, const Matrix &targets)
+{
+    if (predictions.rows() != targets.rows() || predictions.cols() != targets.cols())
+    {
+        throw std::invalid_argument("Predictions and targets matrices must have the same dimensions.");
+    }
+    return predictions - targets;
+}
 }// namespace NeuralNet

@@ -66,7 +66,7 @@ public:
 };
 
 
-class BinaryCrossEntropyLoss
+class CrossEntropyLoss
 {
 public:
     Vector computeLoss(const Matrix &predictions, const Matrix &targets);
