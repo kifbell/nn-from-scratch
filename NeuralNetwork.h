@@ -5,20 +5,19 @@
 #ifndef NN_FROM_SCRATCH_NEURALNETWORK_H
 #define NN_FROM_SCRATCH_NEURALNETWORK_H
 
-#include <iostream>
 #include "eigen/Eigen/Core"
-#include <vector>
+#include <iostream>
 #include <memory>
+#include <vector>
 
-#include "Layer.h"
-#include "Optimizer.h"
 #include "DataHandler.h"
+#include "Layer.h"
 #include "Loss.h"
+#include "Optimizer.h"
 #include "Utils.h"
 
 
-struct InferenceClassifierResult
-{
+struct InferenceClassifierResult {
     double loss;
     int numberCorrect;
 
@@ -26,8 +25,7 @@ struct InferenceClassifierResult
     {}
 };
 
-struct RegressorResult
-{
+struct RegressorResult {
     double loss;
     RegressorResult(double l) : loss(l)
     {}
@@ -52,54 +50,51 @@ public:
     void backprop(Optimizer &optimizer, const Vector &output_gradient);
 
     void trainOnEpochClassifier(CAnyLoss &loss,
-                      Optimizer &optimizer,
-                      DataHandler &trainHandler,
-                      int epoch,
-                      int batchSize,
-                      const int numClasses,
-                      int scale
-    );
+                                Optimizer &optimizer,
+                                DataHandler &trainHandler,
+                                int epoch,
+                                int batchSize,
+                                const int numClasses,
+                                int scale);
     RegressorResult trainOnEpochRegressor(CAnyLoss &loss,
-                      Optimizer &optimizer,
-                      DataHandler &trainHandler,
-                      int epoch,
-                      int batchSize
-    );
+                                          Optimizer &optimizer,
+                                          DataHandler &trainHandler,
+                                          int epoch,
+                                          int batchSize);
 
 
     InferenceClassifierResult inferBatchClassifier(
             CAnyLoss &loss,
             DataBatch evalBatch,
             const int numClasses,
-            int scale
-    );
+            int scale);
 
     int trainClassifier(
-                 CAnyLoss &loss,
-                 Optimizer &optimizer,
-                 DataHandler &trainHandler,
-                 DataHandler &evalHandler,
-                 int batchSize,
-                 int epochs,
-                 double lr,
-                 double lrDecay,
-                 const int numClasses);
+            CAnyLoss &loss,
+            Optimizer &optimizer,
+            DataHandler &trainHandler,
+            DataHandler &evalHandler,
+            int batchSize,
+            int epochs,
+            double lr,
+            double lrDecay,
+            const int numClasses);
 
     int trainRegressor(
-                 CAnyLoss &loss,
-                 Optimizer &optimizer,
-                 DataHandler &trainHandler,
-                 int batchSize,
-                 int epochs,
-                 double lr,
-                 double lrDecay);
+            CAnyLoss &loss,
+            Optimizer &optimizer,
+            DataHandler &trainHandler,
+            int batchSize,
+            int epochs,
+            double lr,
+            double lrDecay);
 
-    static int  runMNISTTest();
+    static int runMNISTTest();
 
     static int runSinTest();
 
     static int runAllTests();
 };
-}
+}// namespace NeuralNet
 
-#endif //NN_FROM_SCRATCH_NEURALNETWORK_H
+#endif//NN_FROM_SCRATCH_NEURALNETWORK_H

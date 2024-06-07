@@ -7,11 +7,12 @@
 #include <iostream>
 #include <memory>
 
-#include "Layer.h"
-#include "Optimizer.h"
 #include "DataHandler.h"
+#include "Layer.h"
 #include "Loss.h"
+#include "Optimizer.h"
 #include "Utils.h"
+#include <chrono>
 
 
 namespace NeuralNet
@@ -49,8 +50,7 @@ void NeuralNetwork::trainOnEpochClassifier(CAnyLoss &loss,
                                            int epoch,
                                            int batchSize,
                                            const int numClasses,
-                                           int scale
-)
+                                           int scale)
 {
     trainHandler.shuffleIndices();
 
@@ -84,8 +84,7 @@ RegressorResult NeuralNetwork::trainOnEpochRegressor(CAnyLoss &loss,
                                                      Optimizer &optimizer,
                                                      DataHandler &trainHandler,
                                                      int epoch,
-                                                     int batchSize
-)
+                                                     int batchSize)
 {
     trainHandler.shuffleIndices();
     int runsInEpoch = trainHandler.getNumberOfSamples() / batchSize;
@@ -101,11 +100,11 @@ RegressorResult NeuralNetwork::trainOnEpochRegressor(CAnyLoss &loss,
         Vector gradientMean = calculateRowwiseMean(gradients);
         backprop(optimizer, gradientMean);
 
-        std::cout << "Epoch: " << epoch
-                  << " progress " << (batchRun * 100) / runsInEpoch << '%'
-                  << " batchRun " << batchRun << '/'
-                  << runsInEpoch << ", Loss: " << lossVector.transpose().mean()
-                  << std::endl;
+        //        std::cout << "Epoch: " << epoch
+        //                  << " progress " << (batchRun * 100) / runsInEpoch << '%'
+        //                  << " batchRun " << batchRun << '/'
+        //                  << runsInEpoch << ", Loss: " << lossVector.transpose().mean()
+        //                  << std::endl;
         epochLoss += lossVector.transpose().mean();
     }
 
@@ -118,8 +117,7 @@ InferenceClassifierResult NeuralNetwork::inferBatchClassifier(
         CAnyLoss &loss,
         DataBatch evalBatch,
         const int numClasses,
-        int scale
-)
+        int scale)
 {
     Matrix predictionEval = passForward(evalBatch.features.transpose() / scale);
 
@@ -234,8 +232,16 @@ int NeuralNetwork::runMNISTTest()
                        batchSize,
                        epochs,
                        lr,
-                       lrDecay, NumClasses
-    );
+                       lrDecay, NumClasses);
+
+    //    auto testBatch = evalHandler.getRandomBatch(5000);
+    //    auto res = nn.inferBatchClassifier(loss, testBatch, NumClasses, 255);
+    //
+    //    std::cout << "Test Score:" << " Loss: " << res.loss
+    //              << ", ratio: " << res.numberCorrect << '/'
+    //              << testBatch.features.rows()
+    //              << std::endl;
+
     return 0;
 }
 
@@ -249,7 +255,7 @@ int NeuralNetwork::runSinTest()
 
     int inputDim = 10;
     int innerDim = 100;
-    double scale =100;
+    double scale = 100;
     CAnyLayer layer1 = LinearLayer(inputDim, innerDim, scale);
     CAnyLayer activation1 = CwiseActivation::ReLu();
     CAnyLayer layer2 = LinearLayer(innerDim, innerDim, scale);
@@ -272,16 +278,19 @@ int NeuralNetwork::runSinTest()
     double beta2 = 0.999;
     double epsilon = 1e-8;
     AMSGrad optimizer(learningRate, beta1, beta2, epsilon);
-//    MomentumOptimizer optimizer(learningRate, 0);
+    //    MomentumOptimizer optimizer(learningRate, 0);
+
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     nn.trainRegressor(loss,
                       optimizer,
                       trainHandler,
                       batchSize,
                       epochs,
                       learningRate,
-                      lrDecay
-    );
+                      lrDecay);
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
+    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
 
 
     double step = 0.1;
@@ -289,7 +298,7 @@ int NeuralNetwork::runSinTest()
 
     Eigen::VectorXd real_sin = X.array().sin();
 
-    int start = 10; // training history
+    int start = 10;// training history
     std::vector<Eigen::VectorXd> X_train;
 
 
@@ -317,16 +326,16 @@ int NeuralNetwork::runSinTest()
         X_in.erase(X_in.begin());
     }
 
-    std::cout << "Predicted values: " << std::endl;
-    for (const auto& val : Y_new) {
-        std::cout << val << std::endl;
-    }
+    //    std::cout << "Predicted values: " << std::endl;
+    //    for (const auto& val : Y_new) {
+    //        std::cout << val << std::endl;
+    //    }
     return 1;
 }
 
 int NeuralNetwork::runAllTests()
 {
     runMNISTTest();
-//    runSinTest();
+    //    runSinTest();
 }
-}
+}// namespace NeuralNet

@@ -5,11 +5,11 @@
 #ifndef NN_FROM_SCRATCH_LOSS_H
 #define NN_FROM_SCRATCH_LOSS_H
 
-#include <iostream>
-#include "eigen/Eigen/Core"
-#include <vector>
-#include <memory>
 #include "AnyMovable.h"
+#include "eigen/Eigen/Core"
+#include <iostream>
+#include <memory>
+#include <vector>
 
 
 namespace NeuralNet
@@ -26,7 +26,6 @@ public:
 
     virtual Matrix
     computeGradient(const Matrix &predictions, const Matrix &targets) = 0;
-
 };
 
 
@@ -34,6 +33,7 @@ template<class TBase, class TObject>
 class CLossImpl : public TBase
 {
     using CBase = TBase;
+
 public:
     using CBase::CBase;
 
@@ -51,6 +51,7 @@ public:
 class CAnyLoss : public NSLibrary::CAnyMovable<ILoss, CLossImpl>
 {
     using CBase = NSLibrary::CAnyMovable<ILoss, CLossImpl>;
+
 public:
     using CBase::CBase;
 };
@@ -72,5 +73,5 @@ public:
 
     Matrix computeGradient(const Matrix &predictions, const Matrix &targets);
 };
-}
-#endif //NN_FROM_SCRATCH_LOSS_H
+}// namespace NeuralNet
+#endif//NN_FROM_SCRATCH_LOSS_H

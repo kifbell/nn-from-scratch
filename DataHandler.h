@@ -1,12 +1,12 @@
 #ifndef NN_FROM_SCRATCH_DATAHANDLER_H
 #define NN_FROM_SCRATCH_DATAHANDLER_H
 
-#include <iostream>
-#include <vector>
-#include <fstream>
-#include <sstream>
-#include <random>
 #include <Eigen/Dense>
+#include <fstream>
+#include <iostream>
+#include <random>
+#include <sstream>
+#include <vector>
 
 namespace NeuralNet
 {
@@ -25,13 +25,13 @@ public:
     }
 
     std::mt19937 engine_{kSeed};
+
 private:
     static constexpr int kSeed = 42;
 };
 
 
-struct DataBatch
-{
+struct DataBatch {
     Vector labels;
     Eigen::MatrixXd features;
 
@@ -62,7 +62,7 @@ public:
         std::vector<int> indices(indices_.begin() + currentBatchIndex, indices_.begin() + currentBatchIndex + batchSize);
         batch.labels = labels_(indices);
         batch.features = features_(indices, Eigen::placeholders::all);
-        currentBatchIndex+=batchSize;
+        currentBatchIndex += batchSize;
         return batch;
     }
 
@@ -99,8 +99,8 @@ public:
     void readData(const std::string &filename);
 
     static void skipFirstLine(std::ifstream &file);
-    void shuffleIndices() ;
+    void shuffleIndices();
 };
-}
+}// namespace NeuralNet
 
-#endif // NN_FROM_SCRATCH_DATAHANDLER_H
+#endif// NN_FROM_SCRATCH_DATAHANDLER_H

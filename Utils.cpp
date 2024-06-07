@@ -32,7 +32,6 @@ Matrix labelsToOneHot(const Vector &labels, const int numClasses)
     {
         Vector targetVector = labelToOneHot(label, numClasses);
         targetVectors.col(colIndex++) = targetVector;
-
     }
     return targetVectors;
 }
@@ -80,4 +79,4 @@ Vector calculateRowwiseMean(const Eigen::MatrixXd &matrix)
 
     return mean;
 }
-}
+}// namespace NeuralNet

@@ -5,10 +5,10 @@
 #ifndef NN_FROM_SCRATCH_UTILS_H
 #define NN_FROM_SCRATCH_UTILS_H
 
-#include <iostream>
 #include <Eigen/Dense>
-#include <vector>
+#include <iostream>
 #include <memory>
+#include <vector>
 
 namespace NeuralNet
 {
@@ -26,6 +26,6 @@ Vector calculateColwiseMean(const Eigen::MatrixXd &matrix);
 int countCorrectPredictions(const Matrix &predictions, const Matrix &targetVectors);
 
 Vector calculateRowwiseMean(const Eigen::MatrixXd &matrix);
-}
+}// namespace NeuralNet
 
-#endif //NN_FROM_SCRATCH_UTILS_H
+#endif//NN_FROM_SCRATCH_UTILS_H

@@ -6,4 +6,4 @@ namespace except
 void react();
 }
 
-#endif //NN_FROM_SCRATCH_EXCEPT_H
+#endif//NN_FROM_SCRATCH_EXCEPT_H

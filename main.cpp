@@ -1,5 +1,5 @@
-#include "NeuralNetwork.h"
 #include "Except.h"
+#include "NeuralNetwork.h"
 
 
 using namespace NeuralNet;

@@ -7,11 +7,10 @@ void MomentumOptimizer::update(Eigen::MatrixXd &weights,
                                Eigen::VectorXd &biases,
                                const Eigen::MatrixXd &gradientWeights,
                                const Eigen::VectorXd &gradientBiases,
-                               OptimizerState &optimizerState
-)
+                               OptimizerState &optimizerState)
 {
-    Eigen::MatrixXd& velocityWeights = optimizerState.getMatrix("velocityWeights", Eigen::MatrixXd::Zero(weights.rows(), weights.cols()));
-    Eigen::VectorXd& velocityBiases = optimizerState.getVector("velocityBiases", Eigen::VectorXd::Zero(biases.size()));
+    Eigen::MatrixXd &velocityWeights = optimizerState.getMatrix("velocityWeights", Eigen::MatrixXd::Zero(weights.rows(), weights.cols()));
+    Eigen::VectorXd &velocityBiases = optimizerState.getVector("velocityBiases", Eigen::VectorXd::Zero(biases.size()));
 
     velocityWeights = momentum * velocityWeights + (1 - momentum) * gradientWeights;
     velocityBiases = momentum * velocityBiases + (1 - momentum) * gradientBiases;
@@ -28,13 +27,13 @@ void AMSGrad::update(Eigen::MatrixXd &weights,
 {
     t++;
 
-    Eigen::MatrixXd& mWeights = optimizerState.getMatrix("mWeights", Eigen::MatrixXd::Zero(weights.rows(), weights.cols()));
-    Eigen::MatrixXd& vWeights = optimizerState.getMatrix("vWeights", Eigen::MatrixXd::Zero(weights.rows(), weights.cols()));
-    Eigen::MatrixXd& vHatWeights = optimizerState.getMatrix("vHatWeights", Eigen::MatrixXd::Zero(weights.rows(), weights.cols()));
+    Eigen::MatrixXd &mWeights = optimizerState.getMatrix("mWeights", Eigen::MatrixXd::Zero(weights.rows(), weights.cols()));
+    Eigen::MatrixXd &vWeights = optimizerState.getMatrix("vWeights", Eigen::MatrixXd::Zero(weights.rows(), weights.cols()));
+    Eigen::MatrixXd &vHatWeights = optimizerState.getMatrix("vHatWeights", Eigen::MatrixXd::Zero(weights.rows(), weights.cols()));
 
-    Eigen::VectorXd& mBiases = optimizerState.getVector("mBiases", Eigen::VectorXd::Zero(biases.size()));
-    Eigen::VectorXd& vBiases = optimizerState.getVector("vBiases", Eigen::VectorXd::Zero(biases.size()));
-    Eigen::VectorXd& vHatBiases = optimizerState.getVector("vHatBiases", Eigen::VectorXd::Zero(biases.size()));
+    Eigen::VectorXd &mBiases = optimizerState.getVector("mBiases", Eigen::VectorXd::Zero(biases.size()));
+    Eigen::VectorXd &vBiases = optimizerState.getVector("vBiases", Eigen::VectorXd::Zero(biases.size()));
+    Eigen::VectorXd &vHatBiases = optimizerState.getVector("vHatBiases", Eigen::VectorXd::Zero(biases.size()));
 
     mWeights = beta1 * mWeights + (1 - beta1) * gradientWeights;
     vWeights = beta2 * vWeights + (1 - beta2) * gradientWeights.array().square().matrix();

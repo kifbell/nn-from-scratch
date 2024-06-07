@@ -61,5 +61,5 @@ void NeuralNet::DataHandler::shuffleIndices()
     static Random rnd;
     currentBatchIndex = 0;
     std::shuffle(indices_.begin(), indices_.end(), rnd.engine_);
-//    https://stackoverflow.com/a/61997758
+    //    https://stackoverflow.com/a/61997758
 }

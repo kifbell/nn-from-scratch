@@ -4,8 +4,8 @@
 
 #include "Layer.h"
 #include "Optimizer.h"
-#include <iostream>
 #include <cassert>
+#include <iostream>
 
 namespace NeuralNet
 {
@@ -26,7 +26,7 @@ Vector LinearLayer::backprop(Optimizer &optimizer, const Vector &u)
     int batchSize = zCache_.cols();
 
     for (size_t idx = 0;
-         idx < batchSize; ++idx)  // try suboptimal implementation for now
+         idx < batchSize; ++idx)// try suboptimal implementation for now
     {
         Matrix grad = u * zCache_.col(idx).transpose();
         assert(
@@ -35,16 +35,15 @@ Vector LinearLayer::backprop(Optimizer &optimizer, const Vector &u)
         deltaA = deltaA + grad;
     }
     deltaA = deltaA / batchSize;
-    Vector deltaB = u;  // (dσ)^T * u^T
+    Vector deltaB = u;// (dσ)^T * u^T
 
-    Vector u_bar = weights_.transpose() * u;  // u * dσ * A
+    Vector u_bar = weights_.transpose() * u;// u * dσ * A
     optimizer.update(
             weights_,
             bias_,
             deltaA,
             deltaB,
-            optimizerState_
-    );
+            optimizerState_);
 
     return u_bar;
 }
@@ -81,7 +80,6 @@ Vector SoftmaxLayer::backprop(Optimizer &, const Vector &u)
         Matrix diagonal = output.col(idx).asDiagonal();
         jacobian = jacobian + diagonal - output.col(idx) * output.col(idx).transpose();
     }
-    return jacobian * u / batchSize; // fixme isn't it u * sigma
+    return jacobian * u / batchSize;// fixme isn't it u * sigma
 }
-}
-
+}// namespace NeuralNet
